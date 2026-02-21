@@ -65,13 +65,13 @@ Choose one of the following installation methods:
 **Option A: One-liner Installation (Recommended)**
 
 ```bash
-kubectl apply -f https://github.com/starbops/kubevirtbmc/releases/latest/download/kubevirtbmc.yaml
+kubectl apply -f https://github.com/kubevirtbmc/kubevirtbmc/releases/latest/download/kubevirtbmc.yaml
 ```
 
 Or install a specific version:
 
 ```bash
-kubectl apply -f https://github.com/starbops/kubevirtbmc/releases/download/v0.4.1/kubevirtbmc.yaml
+kubectl apply -f https://github.com/kubevirtbmc/kubevirtbmc/releases/download/v0.4.1/kubevirtbmc.yaml
 ```
 
 **Option B: Helm Repository**

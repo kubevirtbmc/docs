@@ -26,7 +26,7 @@ KubeVirtBMC provides:
 
 ## Quick Links
 
-* [GitHub Repository](https://github.com/starbops/kubevirtbmc)
+* [GitHub Repository](https://github.com/kubevirtbmc/kubevirtbmc)
 * [Helm Chart](https://charts.zespre.com/)
 
 ## Next Steps
@@ -40,4 +40,4 @@ To get started:
 
 We welcome contributions from the community! Whether you're fixing bugs, adding features, improving documentation, or sharing ideas, your contributions are always welcome. Please feel free to open issues, submit pull requests, or reach out to the maintainers.
 
-**Note:** This documentation is continuously updated. If you encounter issues or have suggestions, please open an issue on [GitHub](https://github.com/starbops/kubevirtbmc).
+**Note:** This documentation is continuously updated. If you encounter issues or have suggestions, please open an issue on [GitHub](https://github.com/kubevirtbmc/kubevirtbmc).

@@ -74,7 +74,7 @@ nav:
     - Running Locally: README-RUNNING.md
 
 extra:
-  copyright: Copyright &copy; 2024 KubeVirtBMC Contributors
+  copyright: Copyright &copy; 2026 KubeVirtBMC Contributors
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/kubevirtbmc/kubevirtbmc

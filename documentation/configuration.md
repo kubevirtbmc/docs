@@ -12,7 +12,7 @@ This guide covers advanced configuration options for KubeVirtBMC.
 
 ## Helm Chart Configuration
 
-For the complete Helm chart values reference, see the [values.yaml](https://github.com/starbops/kubevirtbmc/blob/main/deploy/charts/kubevirtbmc/values.yaml) file.
+For the complete Helm chart values reference, see the [values.yaml](https://github.com/kubevirtbmc/kubevirtbmc/blob/main/deploy/charts/kubevirtbmc/values.yaml) file.
 
 ## Image Configuration
 

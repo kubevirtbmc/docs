@@ -61,5 +61,5 @@ spec:
 - [Kubernetes Services](https://kubernetes.io/docs/concepts/services-networking/service/)
 
 
-For the latest API specification, see the [CRD definition](https://github.com/starbops/kubevirtbmc/blob/main/config/crd/bases/bmc.kubevirt.io_virtualmachinebmcs.yaml).
+For the latest API specification, see the [CRD definition](https://github.com/kubevirtbmc/kubevirtbmc/blob/main/config/crd/bases/bmc.kubevirt.io_virtualmachinebmcs.yaml).
 
