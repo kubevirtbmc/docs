@@ -6,26 +6,26 @@ This guide explains how to run the KubeVirtBMC documentation locally for preview
 
 ### Using Make
 
-You can use the provided make target to set up a virtual environment and run the documentation server:
+From the repository root:
 
 ```bash
-make mkdocs-serve
+make zensical-serve
 ```
 
 This will:
 
 - Create a virtual environment (if it doesn't exist)
-- Install all required dependencies
-- Start the MkDocs development server with live reload
+- Install Zensical
+- Start the development server with live reload
 
-The documentation will be available at `http://127.0.0.1:8000` and will automatically reload when you make changes to the markdown files.
+The documentation will be available at **http://127.0.0.1:8000** and will automatically reload when you change the markdown files.
 
 ## Cleanup
 
-To remove the virtual environment and generated files:
+To remove the virtual environment and generated site:
 
 ```bash
-make mkdocs-cleanup
+make zensical-cleanup
 ```
 
 This will remove:

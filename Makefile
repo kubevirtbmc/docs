@@ -1,7 +1,7 @@
-.PHONY: mkdocs-serve
-mkdocs-serve: ## Run MkDocs development server.
-	@./scripts/run-mkdocs.sh
+.PHONY: zensical-serve
+zensical-serve: ## Run Zensical development server (reads mkdocs.yml).
+	@./scripts/run-zensical.sh
 
-.PHONY: mkdocs-cleanup
-mkdocs-cleanup: ## Clean up MkDocs virtual environment and generated files.
-	@./scripts/cleanup-mkdocs.sh
+.PHONY: zensical-cleanup
+zensical-cleanup: ## Remove virtual environment and generated site.
+	@./scripts/cleanup.sh

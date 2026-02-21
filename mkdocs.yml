@@ -1,6 +1,6 @@
 site_name: KubeVirtBMC Documentation
 site_dir: site
-docs_dir: Documentation
+docs_dir: documentation
 site_description: Out-of-band management for virtual machines on Kubernetes using IPMI and Redfish
 site_author: KubeVirtBMC Contributors
 site_url: https://kubevirtbmc.github.io
