@@ -5,13 +5,12 @@
 Welcome to the **KubeVirtBMC documentation**.
 This guide provides everything you need to install, configure, and operate KubeVirtBMC for managing virtual machines on Kubernetes clusters using industry-standard out-of-band management protocols.
 
-
 ## What is KubeVirtBMC?
 
-`KubeVirtBMC` enables out-of-band management for Kubernetes-based virtual machines using:
+KubeVirtBMC provides out-of-band management for virtual machines run by [KubeVirt](https://kubevirt.io/) on Kubernetes. It uses:
 
-* `IPMI (Intelligent Platform Management Interface)` - Traditional BMC protocol
-* `Redfish` - Modern RESTful API for systems management
+* **IPMI (Intelligent Platform Management Interface)** - Traditional BMC protocol
+* **Redfish** - Modern RESTful API for systems management
 
 It allows infrastructure teams to manage VMs in Kubernetes environments using existing provisioning and management tooling that already supports IPMI or Redfish.
 
@@ -20,7 +19,7 @@ It allows infrastructure teams to manage VMs in Kubernetes environments using ex
 KubeVirtBMC provides:
 
 * IPMI support for power management and boot configuration
-* Redfish API (v1.16.1 compliant)
+* Redfish protocol support (based on CSDL v1.16.1)
 * Virtual media support for ISO image attachment
 * Designed for integration with existing provisioning pipelines
 
