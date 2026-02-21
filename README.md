@@ -2,7 +2,7 @@
 
 This repository contains the documentation for **KubeVirtBMC** — out-of-band management for virtual machines on Kubernetes using IPMI and Redfish. The docs cover installation, configuration, architecture, API reference, and user guides (IPMI, Redfish, virtual media).
 
-The site is built with [Zensical](https://zensical.org/), which reads our `mkdocs.yml` configuration.
+The site is built with [Zensical](https://zensical.org/) using the `zensical.toml` configuration.
 
 ## Serving the docs locally
 

@@ -1,0 +1,74 @@
+# KubeVirtBMC Documentation - Zensical configuration
+# https://zensical.org/docs/setup/basics/
+
+[project]
+site_name = "KubeVirtBMC Documentation"
+site_description = "Out-of-band management for virtual machines on Kubernetes using IPMI and Redfish"
+site_author = "KubeVirtBMC Contributors"
+site_url = "https://kubevirtbmc.github.io"
+site_dir = "site"
+docs_dir = "docs"
+copyright = "Copyright &copy; 2026 KubeVirtBMC Contributors"
+edit_uri = "edit/main/docs/"
+repo_name = "kubevirtbmc/kubevirtbmc"
+repo_url = "https://github.com/kubevirtbmc/kubevirtbmc"
+extra_css = ["assets/css/custom.css"]
+
+nav = [
+  { "Home" = "index.md" },
+  { "Getting Started" = [
+    { "Introduction" = "introduction.md" },
+    { "Quick Start" = "getting-started.md" }
+  ]},
+  { "Architecture & Development" = [
+    { "Architecture" = "architecture.md" },
+    { "API Reference" = "api-reference.md" }
+  ]},
+  { "Configuration" = [
+    { "Configuration Guide" = "configuration.md" }
+  ]},
+  { "User Guides" = [
+    { "IPMI Guide" = "ipmi-guide.md" },
+    { "Redfish Guide" = "redfish-guide.md" },
+    { "Virtual Media" = "virtual-media.md" }
+  ]}
+]
+
+# Theme: modern Zensical look (default)
+[project.theme]
+variant = "modern"
+favicon = "images/favicon.svg"
+features = [
+  "navigation.tabs",
+  "navigation.sections",
+  "navigation.expand",
+  "navigation.top",
+  "search.suggest",
+  "search.highlight",
+  "content.code.annotate",
+  "content.code.copy"
+]
+
+# Light/dark palette toggle
+[[project.theme.palette]]
+scheme = "default"
+primary = "blue"
+accent = "blue"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+scheme = "slate"
+primary = "blue"
+accent = "blue"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to light mode"
+
+# Footer social links
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/kubevirtbmc/kubevirtbmc"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/docker"
+link = "https://hub.docker.com/kubevirtbmc/virtbmc-controller"

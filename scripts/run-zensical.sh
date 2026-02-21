@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script to install Zensical and run the live server using a virtual environment.
-# Zensical reads mkdocs.yml natively; see https://zensical.org/
+# Uses zensical.toml in the project root; see https://zensical.org/
 
 set -e
 
@@ -30,5 +30,5 @@ echo "Installing Zensical..."
 pip install zensical
 
 echo ""
-echo "Starting Zensical server (uses mkdocs.yml in project root)..."
+echo "Starting Zensical server (uses zensical.toml)..."
 zensical serve
