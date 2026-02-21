@@ -4,4 +4,4 @@ zensical-serve: ## Run Zensical development server (uses zensical.toml).
 
 .PHONY: zensical-cleanup
 zensical-cleanup: ## Remove virtual environment and generated site.
-	@./scripts/cleanup.sh
+	@./scripts/clean-zensical.sh

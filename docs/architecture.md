@@ -4,7 +4,7 @@ This document describes the architecture and design of KubeVirtBMC.
 
 ## System Architecture
 
-![KubeVirtBMC Architecture](assets/kubevirtbmc_architecture.png)
+![KubeVirtBMC Architecture](assets/images/kubevirtbmc_architecture.png)
 
 ## Components
 

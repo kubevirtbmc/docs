@@ -71,4 +71,4 @@ link = "https://github.com/kubevirtbmc/kubevirtbmc"
 
 [[project.extra.social]]
 icon = "fontawesome/brands/docker"
-link = "https://hub.docker.com/kubevirtbmc/virtbmc-controller"
+link = "https://hub.docker.com/r/starbops/virtbmc-controller"
