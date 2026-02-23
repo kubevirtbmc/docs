@@ -62,17 +62,19 @@ For more information about KubeVirt installation and configuration, see the [Kub
 
 Choose one of the following installation methods:
 
-**Option A: One-liner Installation (Recommended)**
+**Option A: Latest Installation (Recommended)**
 
 ```bash
-kubectl apply -f https://github.com/kubevirtbmc/kubevirtbmc/releases/latest/download/kubevirtbmc.yaml
+kubectl apply -f https://github.com/kubevirtbmc/kubevirtbmc/releases/download/v0.7.1/kubevirtbmc-install.yaml
 ```
 
 Or install a specific version:
 
 ```bash
-kubectl apply -f https://github.com/kubevirtbmc/kubevirtbmc/releases/download/v0.4.1/kubevirtbmc.yaml
+kubectl apply -f https://github.com/kubevirtbmc/kubevirtbmc/releases/download/<version>/kubevirtbmc-install.yaml
 ```
+
+> **Note:** Starting from `v0.7.1`, we began publishing a single `kubevirtbmc-install.yaml` file. Therefore, you can use v0.7.1 or any later version.
 
 **Option B: Helm Repository**
 
