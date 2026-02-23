@@ -74,7 +74,9 @@ Or install a specific version:
 kubectl apply -f https://github.com/kubevirtbmc/kubevirtbmc/releases/download/<version>/kubevirtbmc-install.yaml
 ```
 
-> **Note:** Starting from `v0.7.1`, we began publishing a single `kubevirtbmc-install.yaml` file. Therefore, you can use v0.7.1 or any later version.
+!!! note
+
+    Starting from `v0.7.1`, we began publishing a single `kubevirtbmc-install.yaml` file. Therefore, you can use v0.7.1 or any later version.
 
 **Option B: Helm Repository**
 
