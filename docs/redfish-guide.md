@@ -23,10 +23,14 @@ http://testvm-virtbmc.default.svc.cluster.local/redfish/v1
 Since Redfish requires cluster network access, run a Redfish client pod:
 
 ```bash
-kubectl run -it --rm redfish-client \
+kubectl run redfish-client \
     --image=curlimages/curl:latest \
     --restart=Never \
-    --command -- /bin/sh
+    --command -- sleep 9999999
+```
+
+```bash
+kubectl exec -it redfish-client -- /bin/sh
 ```
 
 Inside the pod, use the service DNS name:

@@ -27,10 +27,14 @@ IPMI is a standardized UDP-based protocol for chassis control. KubeVirtBMC imple
 Since IPMI uses UDP and requires cluster network access, run an IPMI client pod:
 
 ```bash
-kubectl run -it --rm ipmitool \
+kubectl run ipmitool \
     --image=mikeynap/ipmitool \
     --restart=Never \
-    --command -- /bin/sh
+    --command -- sleep 9999999
+```
+
+```bash
+kubectl exec -it ipmitool -- /bin/sh
 ```
 
 Inside the pod, use the service DNS name:
