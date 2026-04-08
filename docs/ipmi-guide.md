@@ -11,15 +11,14 @@ IPMI is a standardized UDP-based protocol for chassis control. KubeVirtBMC imple
 <vm-name>-virtbmc.<namespace>.svc.cluster.local:623
 ```
 
-**NOTE: IPMI Security and Future Plans**
-> 
-> IPMI support in KubeVirtBMC currently only supports IPMI v1, which is rarely used nowadays. The underlying IPMI library dependency is unmaintained, raising security concerns.
-> 
-> **Authentication Limitation:** Since IPMI is a UDP-based protocol without a backend server for authentication, any username and password combination will be accepted. Credentials are validated at the protocol level by the IPMI library, but there is no server-side authentication mechanism. This is a fundamental limitation of the IPMI protocol implementation in KubeVirtBMC.
-> 
-> **Future Plans:** We are planning to add a toggle in the VirtualMachineBMC CRD to disable IPMI functionality by default. 
-> 
-> **Recommendation:** For production use, we recommend using the [Redfish API](redfish-guide.md) which provides better security, proper authentication, and modern RESTful access.
+!!! note "IPMI Security and Future Plans"
+    IPMI support in KubeVirtBMC currently only supports IPMI v1, which is rarely used nowadays. The underlying IPMI library dependency is unmaintained, raising security concerns.
+
+    **Authentication Limitation:** Since IPMI is a UDP-based protocol without a backend server for authentication, any username and password combination will be accepted. Credentials are validated at the protocol level by the IPMI library, but there is no server-side authentication mechanism. This is a fundamental limitation of the IPMI protocol implementation in KubeVirtBMC.
+
+    **Future Plans:** We are planning to add a toggle in the VirtualMachineBMC CRD to disable IPMI functionality by default.
+
+    **Recommendation:** For production use, we recommend using the [Redfish API](redfish-guide.md) which provides better security, proper authentication, and modern RESTful access.
 
 ## Accessing IPMI
 

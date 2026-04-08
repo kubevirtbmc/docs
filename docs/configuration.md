@@ -39,7 +39,9 @@ manager:
 
 Redfish can be exposed externally using Ingress, enabling access from outside the cluster.
 
-> **Note:** The [ingress-nginx controller is retiring](https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/). Consider using alternative ingress controllers such as Traefik or F5, or use the Gateway API instead.
+!!! note
+
+    The [ingress-nginx controller is retiring](https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/). Consider using alternative ingress controllers such as Traefik or F5, or use the Gateway API instead.
 
 ### Prerequisites
 

@@ -42,7 +42,8 @@ Redfish supports two authentication methods:
 1. **Session-based authentication** (recommended) - Create a session to obtain a token
 2. **Basic authentication** - Use HTTP Basic Auth directly
 
-> NOTE: Redfish uses a backend server that validates credentials from the Kubernetes Secret. Unlike IPMI, Redfish supports proper session management and token-based authentication. Credentials are read from the Secret specified in the VirtualMachineBMC resource.
+!!! note
+    Redfish uses a backend server that validates credentials from the Kubernetes Secret. Unlike IPMI, Redfish supports proper session management and token-based authentication. Credentials are read from the Secret specified in the VirtualMachineBMC resource.
 
 ### Basic Authentication
 
