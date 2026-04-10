@@ -33,6 +33,12 @@ kubectl run redfish-client \
 kubectl exec -it redfish-client -- /bin/sh
 ```
 
+Delete the pod: 
+
+```bash
+kubectl delete pod redfish-client
+```
+
 Inside the pod, use the service DNS name:
 
 ```bash
