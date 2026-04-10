@@ -37,6 +37,12 @@ kubectl run ipmitool \
 kubectl exec -it ipmitool -- /bin/sh
 ```
 
+Delete the pod: 
+
+```bash
+kubectl delete pods ipmitool
+```
+
 Inside the pod, use the service DNS name:
 
 ```bash
