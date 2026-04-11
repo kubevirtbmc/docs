@@ -24,13 +24,19 @@ Since Redfish requires cluster network access, run a Redfish client pod:
 
 ```bash
 kubectl run redfish-client \
-    --image=curlimages/curl:latest \
+    --image=alpine \
     --restart=Never \
     --command -- sleep 9999999
 ```
 
 ```bash
 kubectl exec -it redfish-client -- /bin/sh
+```
+
+Once inside the pod, install `curl` and `jq`:
+
+```bash
+apk add --no-cache curl jq
 ```
 
 Delete the pod: 
@@ -61,14 +67,14 @@ You can use HTTP Basic Auth directly without creating a session:
 
 ```bash
 curl -u admin:admin123 \
-    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 | jq
 ```
 
 Or with explicit Basic Auth header:
 
 ```bash
 curl -H "Authorization: Basic $(echo -n 'admin:admin123' | base64)" \
-    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 | jq
 ```
 
 ### Session-Based Authentication
@@ -100,7 +106,7 @@ Include the token in the `X-Auth-Token` header for all authenticated requests:
 
 ```bash
 curl -H "X-Auth-Token: $TOKEN" \
-    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 | jq
 ```
 
 ## Service Discovery
@@ -108,7 +114,7 @@ curl -H "X-Auth-Token: $TOKEN" \
 ### Service Root
 
 ```bash
-curl http://testvm-virtbmc.default.svc.cluster.local/redfish/v1
+curl http://testvm-virtbmc.default.svc.cluster.local/redfish/v1 | jq
 ```
 
 Returns available resources including Systems, Managers, and SessionService.
@@ -119,7 +125,7 @@ Returns available resources including Systems, Managers, and SessionService.
 
 ```bash
 curl -H "X-Auth-Token: $TOKEN" \
-    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 | jq
 ```
 
 ### Power On
@@ -269,14 +275,14 @@ curl -i -X PATCH \
 
 ```bash
 curl -H "X-Auth-Token: $TOKEN" \
-    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 \
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 | jq
 ```
 
 ### Get Manager Information
 
 ```bash
 curl -H "X-Auth-Token: $TOKEN" \
-    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Managers/BMC
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Managers/BMC | jq
 ```
 
 ## Next Steps

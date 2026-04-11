@@ -153,7 +153,7 @@ curl -i -X POST \
 
 ```bash
 curl -H "X-Auth-Token: $TOKEN" \
-    http://testvm-virtbmc.default.svc/redfish/v1/Managers/BMC/VirtualMedia/CD1
+    http://testvm-virtbmc.default.svc/redfish/v1/Managers/BMC/VirtualMedia/CD1 | jq
 ```
 
 **Response includes:**
