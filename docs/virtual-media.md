@@ -97,6 +97,38 @@ EOF
 - Bus type should be `sata` (recommended) or `scsi`
 - Disk name can be any value (e.g., `cdrom`, `iso`, `dvd`)
 
+## Storage Overhead
+
+If you are using a storage backend with higher filesystem overhead
+than CDI's default assumption of 6% (e.g. Ceph RBD which can have ~9.5%
+overhead), you may still encounter the following error:
+
+```
+virtual image size is larger than the reported available storage. A larger PVC is required
+```
+
+In this case, you need to increase the `filesystemOverhead` in your CDI
+config to match your storage backend's actual overhead. Set the value to a
+percentage slightly above your backend's real overhead (e.g. `0.15` for 15%,
+which gives a safe buffer for Ceph RBD):
+
+```bash
+kubectl patch cdi cdi --type=merge -p \
+  '{"spec":{"config":{"filesystemOverhead":{"global":"0.15"}}}}'
+```
+
+!!! note
+
+    This tells CDI to allocate a larger scratch PVC during import, ensuring
+    there is enough usable space after the storage backend takes its overhead
+    cut.
+
+Verify it applied:
+
+```bash
+kubectl get cdiconfig config -o jsonpath='{.status.filesystemOverhead}'
+```
+
 ## Inserting Virtual Media
 
 ### Using Redfish API
