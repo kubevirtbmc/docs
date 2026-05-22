@@ -107,12 +107,20 @@ ipmitool -I lan -U admin -P password -H testvm-virtbmc.default.svc.cluster.local
 ```bash
 ipmitool -I lan -U admin -P password -H testvm-virtbmc.default.svc.cluster.local chassis bootdev disk
 ```
+
+### Set Boot to CD-ROM
+
+```bash
+ipmitool -I lan -U admin -P password -H testvm-virtbmc.default.svc.cluster.local chassis bootdev cdrom
+```
+
 ### Supported Boot Devices
 
 | Device | Description |
 |--------|-------------|
 | `pxe` | Network boot (PXE) |
 | `disk` | Boot from disk |
+| `cdrom` | Boot from CD-ROM |
 
 ## Next Steps
 
