@@ -42,6 +42,8 @@ spec:
     name: string  # Required
   authSecretRef:
     name: string  # Required
+  ipmi:
+    enabled: false  # Optional, defaults to false
 ```
 
 #### Fields
@@ -52,6 +54,22 @@ spec:
 | `virtualMachineRef.name` | `string` | Yes | Name of the VirtualMachine resource |
 | `authSecretRef` | `LocalObjectReference` | Yes | Reference to the Secret containing BMC credentials |
 | `authSecretRef.name` | `string` | Yes | Name of the Secret resource |
+| `ipmi` | `IPMISpec` | No | IPMI configuration. When omitted, IPMI is disabled. |
+
+### IPMISpec
+
+IPMISpec configures the IPMI simulator.
+
+```yaml
+ipmi:
+  enabled: false  # Optional, defaults to false
+```
+
+#### Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `ipmi.enabled` | `bool` | No | Toggles the IPMI simulator. Defaults to `false` when omitted. Set to `true` to enable IPMI support. |
 
 
 ## Related Resources
