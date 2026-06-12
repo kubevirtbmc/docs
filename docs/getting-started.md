@@ -66,7 +66,7 @@ Choose one of the following installation methods:
 **Option A: Latest Installation (Recommended)**
 
 ```bash
-kubectl apply -f https://github.com/kubevirtbmc/kubevirtbmc/releases/download/v0.7.1/kubevirtbmc-install.yaml
+kubectl apply -f https://github.com/kubevirtbmc/kubevirtbmc/releases/latest/download/kubevirtbmc-install.yaml
 ```
 
 Or install a specific version:
