@@ -243,6 +243,21 @@ curl -i -X PATCH \
     }'
 ```
 
+### Set Boot to CD-ROM (One-time)
+
+```bash
+curl -i -X PATCH \
+    -H "Content-Type: application/json" \
+    -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 \
+    -d '{
+        "Boot": {
+            "BootSourceOverrideTarget": "Cd",
+            "BootSourceOverrideEnabled": "Once"
+        }
+    }'
+```
+
 ### Set Boot Mode
 
 ```bash

@@ -152,6 +152,34 @@ curl -i -X POST \
     }'
 ```
 
+## Booting from Virtual Media
+
+After inserting virtual media, a DataVolume is created and the ISO image begins downloading. Once the download is complete, configure the VM to boot from the CD-ROM and restart it:
+
+```bash
+# Watch the DataVolume download progress
+kubectl get datavolume testvm -n default -w
+
+# Set boot override to CD-ROM
+curl -i -X PATCH \
+    -H "Content-Type: application/json" \
+    -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc/redfish/v1/Systems/1 \
+    -d '{
+        "Boot": {
+            "BootSourceOverrideTarget": "Cd",
+            "BootSourceOverrideEnabled": "Once"
+        }
+    }'
+
+# Restart the VM to boot from CD-ROM
+curl -i -X POST \
+    -H "Content-Type: application/json" \
+    -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc/redfish/v1/Systems/1/Actions/ComputerSystem.Reset \
+    -d '{"ResetType":"GracefulRestart"}'
+```
+
 ### Request Parameters
 
 | Parameter | Type | Required | Description |
