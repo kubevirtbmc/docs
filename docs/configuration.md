@@ -136,40 +136,35 @@ This example uses Istio as the Gateway API implementation and cert-manager to au
 
 1. Verify whether Gateway API support is enabled:
 
-```bash
-kubectl -n cert-manager get deployment cert-manager -o yaml | grep -i enable-gateway-api
-```
+    ```bash
+    kubectl -n cert-manager get deployment cert-manager -o yaml | grep -i enable-gateway-api
+    ```
 
-Expected output:
+    If the output is empty, proceed with the next step.
 
-```bash
-kubectl -n cert-manager get deployment cert-manager -o yaml | grep -i enable-gateway-api
-      - --enable-gateway-api
-```
 
-2. If its not enabled and if cert-manager was installed using Helm chart, run:
+2. To add the GatewayAPI support and if cert-manager was installed using Helm chart, run:
 
-```bash
-helm upgrade cert-manager jetstack/cert-manager --namespace cert-manager --reuse-values --set extraArgs="{--enable-gateway-api}"
-```
+    ```bash
+    helm upgrade cert-manager jetstack/cert-manager --namespace cert-manager --reuse-values --set extraArgs="{--enable-gateway-api}"
+    ```
 
-Alternatively, if it was installed using manifest:
+3. Alternatively, if it was installed using manifest:
 
-```bash
-kubectl patch deployment cert-manager -n cert-manager --type=json -p='[ { "op":"add", "path":"/spec/template/spec/containers/0/args/-", "value":"--enable-gateway-api" } ]'
-```
+    ```bash
+    kubectl patch deployment cert-manager -n cert-manager --type=json -p='[ { "op":"add", "path":"/spec/template/spec/containers/0/args/-", "value":"--enable-gateway-api" } ]'
+    ```
 
-3. Verify if the deployment rolled out successfully:
+4. Verify if the deployment rolled out successfully:
 
-```bash
-kubectl rollout status deployment cert-manager -n cert-manager
-```
+    ```bash
+    kubectl rollout status deployment cert-manager -n cert-manager
+    ```
 
 #### Step 2: Create ClusterIssuer (for TLS)
 
-Create a ClusterIssuer `clusterissuer.yaml` using Let's Encrypt for production use:
-
-```yaml
+```bash
+kubectl apply -f - <<'EOF'
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -189,12 +184,7 @@ spec:
             kind: Gateway
             name: bmc-gateway
             namespace: default
-```
-
-Apply the issuer:
-
-```bash
-kubectl apply -f clusterissuer.yaml
+EOF
 ```
 
 Verify that the ClusterIssuer becomes ready:
@@ -213,9 +203,10 @@ letsencrypt-prod   True    146m
 
 #### Step 3: Create Gateway Resource 
 
-Create a Gateway `gateway.yaml` with both HTTP and HTTPS listeners. The HTTP listener is required for cert-manager HTTP-01 challenge validation.
+Create a Gateway with both HTTP and HTTPS listeners. The HTTP listener is required for cert-manager HTTP-01 challenge validation.
 
-```yaml
+```bash
+kubectl apply -f - <<'EOF'
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -247,19 +238,15 @@ spec:
     allowedRoutes:
       namespaces:
         from: Same
-```
-
-Apply the Gateway:
-
-```bash
-kubectl apply -f gateway.yaml
+EOF
 ```
 
 #### Step 4: Create HTTPRoute Resource for Each Virtual BMC
 
-Create an HTTPRoute `httproute.yaml` that forwards Redfish traffic to the VirtualBMC Service.
+Create an HTTPRoute that forwards Redfish traffic to the VirtualBMC Service.
 
-```yaml
+```bash
+kubectl apply -f - <<'EOF'
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -278,14 +265,9 @@ spec:
         type: PathPrefix
         value: /redfish/v1
     backendRefs:
-    - name: my-vm-virtbmc
+    - name: testvm-virtbmc
       port: 80
-```
-
-Apply the HTTPRoute:
-
-```bash
-kubectl apply -f httproute.yaml
+EOF
 ```
 
 #### Step 5: Verify the resources
@@ -294,9 +276,6 @@ Monitor certificate creation:
 
 ```bash
 kubectl get certificate
-kubectl get certificaterequest
-kubectl get challenge
-kubectl get order
 ```
 
 Once certificate issuance completes successfully:
@@ -349,7 +328,7 @@ curl https://my-vm-bmc.example.com/redfish/v1
 curl -k -i -X POST \
     -H "Content-Type: application/json" \
     https://my-vm-bmc.example.com/redfish/v1/SessionService/Sessions \
-    -d '{"UserName":"admin","Password":"password"}'
+    -d '{"UserName":"admin","Password":"admin123"}'
 ```
 
 ### Secret Management
