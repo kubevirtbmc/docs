@@ -39,16 +39,18 @@ Once inside the pod, install `curl` and `jq`:
 apk add --no-cache curl jq
 ```
 
-Delete the pod: 
-
-```bash
-kubectl delete pod redfish-client
-```
-
 Inside the pod, use the service DNS name:
 
 ```bash
 curl http://<vm-name>-virtbmc.<namespace>.svc.cluster.local/redfish/v1
+```
+
+### Cleanup
+
+Once finished and exited, delete the pod: 
+
+```bash
+kubectl delete pod redfish-client
 ```
 
 ## Authentication
