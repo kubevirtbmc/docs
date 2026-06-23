@@ -21,3 +21,8 @@ body,
   font-family: var(--md-code-font-family);
 }
 
+/* Increase logo size */
+.md-header__button.md-logo img {
+  height: 2.5rem; /* Adjust this value up or down as needed */
+  width: auto;
+}
