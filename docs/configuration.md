@@ -48,13 +48,14 @@ Redfish can be exposed externally using Ingress, enabling access from outside th
 1. Ingress controller installed 
 2. cert-manager for TLS certificates
 
-### Using Ingress
+### Using Ingress:
 
 #### Step 1: Create ClusterIssuer (for TLS)
 
 Create a ClusterIssuer using Let's Encrypt for production use:
 
-```yaml
+```bash
+kubectl apply -f - <<'EOF'
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -70,12 +71,14 @@ spec:
     - http01:
         ingress:
           ingressClassName: <ingressClassName>
+EOF
 ```
 
 
 #### Step 2: Create Ingress for Each Virtual BMC
 
-```yaml
+```bash
+kubectl apply -f - <<'EOF'
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -101,6 +104,7 @@ spec:
             name: my-vm-virtbmc
             port:
               number: 80
+EOF
 ```
 
 #### Step 3: Access Redfish Externally
