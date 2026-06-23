@@ -116,6 +116,220 @@ curl -k -i -X POST \
     -d '{"UserName":"admin","Password":"password"}'
 ```
 
+### Using Kubernetes GatewayAPI:
+
+Redfish can also be exposed externally using the Kubernetes Gateway API, enabling secure access from outside the cluster without requiring a traditional Ingress resource.
+
+This example uses Istio as the Gateway API implementation and cert-manager to automatically provision TLS certificates from Let's Encrypt. Review specific implementation documentation for installing them.
+
+!!! note
+
+    cert-manager Gateway API support is not enabled by default. To automatically provision TLS certificates from Gateway resources, cert-manager must be installed with the --enable-gateway-api option.
+
+#### Prerequisites
+1. Gateway API CRDs installed
+2. A Gateway API implementation installed (Istio, Traefik, Envoy Gateway, Kong, etc.)
+3. cert-manager for TLS certificates
+4. A publicly accessible hostname that resolves to the Gateway external IP address
+
+#### Step 1: Enable Gateway API Support in cert-manager
+
+1. Verify whether Gateway API support is enabled:
+
+    ```bash
+    kubectl -n cert-manager get deployment cert-manager -o yaml | grep -i enable-gateway-api
+    ```
+
+    If the output is empty, proceed with the next step.
+
+
+2. To add the GatewayAPI support and if cert-manager was installed using Helm chart, run:
+
+    ```bash
+    helm upgrade cert-manager jetstack/cert-manager --namespace cert-manager --reuse-values --set extraArgs="{--enable-gateway-api}"
+    ```
+
+3. Alternatively, if it was installed using manifest:
+
+    ```bash
+    kubectl patch deployment cert-manager -n cert-manager --type=json -p='[ { "op":"add", "path":"/spec/template/spec/containers/0/args/-", "value":"--enable-gateway-api" } ]'
+    ```
+
+4. Verify if the deployment rolled out successfully:
+
+    ```bash
+    kubectl rollout status deployment cert-manager -n cert-manager
+    ```
+
+#### Step 2: Create ClusterIssuer (for TLS)
+
+```bash
+kubectl apply -f - <<'EOF'
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    # Replace this email address with your own.
+    email: abc@org.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    solvers:
+    - http01:
+        gatewayHTTPRoute:
+          parentRefs:
+          - group: gateway.networking.k8s.io
+            kind: Gateway
+            name: bmc-gateway
+            namespace: default
+EOF
+```
+
+Verify that the ClusterIssuer becomes ready:
+
+```bash
+kubectl get clusterissuer
+```
+
+Example output:
+
+```bash
+kubectl get clusterissuer
+NAME               READY   AGE
+letsencrypt-prod   True    146m
+```
+
+#### Step 3: Create Gateway Resource 
+
+Create a Gateway with both HTTP and HTTPS listeners. The HTTP listener is required for cert-manager HTTP-01 challenge validation.
+
+```bash
+kubectl apply -f - <<'EOF'
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: bmc-gateway
+  namespace: default
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  gatewayClassName: istio
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80
+    hostname: "my-vm-bmc.example.com"
+    allowedRoutes:
+      namespaces:
+        from: Same
+  - name: https
+    protocol: HTTPS
+    port: 443
+    hostname: "my-vm-bmc.example.com"
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - group: ""
+        kind: Secret
+        name: my-vm-bmc-tls    # This secret gets created automatically by cert-manager and manage it as referenced by the Gateway.
+    allowedRoutes:
+      namespaces:
+        from: Same
+EOF
+```
+
+#### Step 4: Create HTTPRoute Resource for Each Virtual BMC
+
+Create an HTTPRoute that forwards Redfish traffic to the VirtualBMC Service.
+
+```bash
+kubectl apply -f - <<'EOF'
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: testbmc-route
+  namespace: default
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: bmc-gateway
+  hostnames:
+  - "my-vm-bmc.example.com"
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /redfish/v1
+    backendRefs:
+    - name: testvm-virtbmc
+      port: 80
+EOF
+```
+
+#### Step 5: Verify the resources
+
+Monitor certificate creation:
+
+```bash
+kubectl get certificate
+```
+
+Once certificate issuance completes successfully:
+
+```bash
+kubectl get secret my-vm-bmc-tls
+```
+
+Example output:
+
+```bash
+NAME                TYPE                DATA   AGE
+my-vm-virtbmc-tls   kubernetes.io/tls   2      1m
+```
+
+Verify the Gateway:
+
+```bash
+kubectl get gateway
+```
+
+Example output:
+
+```bash
+NAME          CLASS   ADDRESS          PROGRAMMED
+bmc-gateway   istio   203.10.11.12     True
+```
+
+Verify the HTTPRoute:
+
+```bash
+kubectl get httproute
+```
+
+Expected output:
+
+```bash
+kubectl get httproute 
+NAME            HOSTNAMES                                    AGE
+testbmc-route   ["my-vm-bmc.example.com"]                    106m
+```
+
+#### Step 5: Access Redfish Externally
+
+```bash
+# Access via HTTPS
+curl https://my-vm-bmc.example.com/redfish/v1
+
+# Create session
+curl -k -i -X POST \
+    -H "Content-Type: application/json" \
+    https://my-vm-bmc.example.com/redfish/v1/SessionService/Sessions \
+    -d '{"UserName":"admin","Password":"admin123"}'
+```
+
 ### Secret Management
 
 #### Using External Secrets Operator
