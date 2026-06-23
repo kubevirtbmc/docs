@@ -37,7 +37,8 @@ nav = [
 # Theme: modern Zensical look (default)
 [project.theme]
 variant = "modern"
-favicon = "images/favicon.svg"
+logo = "https://cdn.jsdelivr.net/gh/kubevirtbmc/kubevirtbmc@main/docs/assets/images/kubevirtbmc_icon_transparent.png"
+favicon = "https://cdn.jsdelivr.net/gh/kubevirtbmc/kubevirtbmc@main/docs/assets/images/favicon_48x48.png"
 features = [
   "navigation.tabs",
   "navigation.sections",
