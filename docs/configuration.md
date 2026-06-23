@@ -214,7 +214,6 @@ metadata:
   namespace: default
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    networking.istio.io/service-type: "LoadBalancer"
 spec:
   gatewayClassName: istio
   listeners:
