@@ -65,6 +65,16 @@ kubectl delete pods ipmitool
 
 ## Power Management
 
+KubeVirtBMC implements IPMI chassis control commands per [IPMI specification §28.3](https://www.intel.com/content/www/us/en/products/docs/servers/ipmi/ipmi-second-gen-interface-spec-v2-rev1-1.html). Each `ipmitool power` subcommand maps to a specific chassis control operation:
+
+| `ipmitool` Command | Chassis Control | KubeVirtBMC Method | Behavior |
+|---------------------|-----------------|-------------------|----------|
+| `power off` | Power Down (0x00) | `ForcePowerOff()` | Immediate power off — stops the VM instantly without OS notification |
+| `power soft` | ACPI Soft (0x05) | `PowerOff()` | Graceful ACPI shutdown — sends shutdown signal to the guest OS |
+| `power on` | Power Up (0x01) | `PowerOn()` | Start the VM |
+| `power cycle` | Power Cycle (0x02) | `ForcePowerCycle()` | Force power cycle — immediately cuts power and restores the VM without OS notification |
+| `power reset` | Hard Reset (0x03) | `PowerCycle()` | System reset — resets the VM without removing power, like pressing the reset button |
+
 ### Power Status
 
 ```bash
@@ -79,25 +89,39 @@ ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power status
 
 ```bash
 ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power on
-
 ```
 
-### Power Off (Graceful)
+### Power Off (Immediate)
 
 ```bash
 ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power off
-
 ```
 
-Sends ACPI shutdown signal. VM must support ACPI for graceful shutdown.
+Immediately stops the VM without OS notification. This is equivalent to pulling the power cord on a physical machine.
 
-### Power Cycle
+### Power Soft (ACPI Graceful Shutdown)
+
+```bash
+ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power soft
+```
+
+Sends an ACPI shutdown signal to the guest OS. The VM must support ACPI for graceful shutdown.
+
+### Power Cycle (Force)
 
 ```bash
 ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power cycle
 ```
 
-Powers off, waits briefly, then powers on.
+Immediately cuts power and restores it to the VM without OS notification. This is the most brutal power operation — equivalent to pulling the power cord and plugging it back in on a physical machine. The VM is forcefully stopped, then started again.
+
+### Power Reset (System Reset)
+
+```bash
+ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power reset
+```
+
+Resets the VM without removing power. This is equivalent to pressing the reset button on a physical machine — less brutal than a full power cycle since power is maintained throughout.
 
 
 ### Power Commands Summary
@@ -105,8 +129,10 @@ Powers off, waits briefly, then powers on.
 | Command | Description | Graceful |
 |---------|-------------|----------|
 | `power on` | Start VM | N/A |
-| `power off` | Shutdown VM | Yes |
-| `power cycle` | Off then On | Partial |
+| `power off` | Immediate power off | No |
+| `power soft` | ACPI graceful shutdown | Yes |
+| `power cycle` | Force power cycle (cut and restore power) | No |
+| `power reset` | System reset (restart without power removal) | No |
 
 ## Boot Device Configuration
 
