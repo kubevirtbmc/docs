@@ -156,6 +156,19 @@ curl -i -X POST \
 
 After inserting virtual media, a DataVolume is created and the ISO image begins downloading. Once the download is complete, configure the VM to boot from the CD-ROM and restart it:
 
+!!! note "InsertMedia is asynchronous"
+
+    `InsertMedia` returns as soon as the DataVolume is created — it does
+    not wait for the ISO to finish downloading. KubeVirtBMC forces the
+    import to start immediately (via the
+    `cdi.kubevirt.io/storage.bind.immediate.requested` annotation), so this
+    works even on stopped VMs and `WaitForFirstConsumer` storage classes.
+
+    Power-on requests are accepted immediately, but the VM's pod won't
+    schedule until the DataVolume reaches `Succeeded` — so provisioning
+    tools with power-on timeouts may time out waiting for the VM to come
+    up. Wait for `Succeeded` (below) before powering on to avoid this.
+
 ```bash
 # Watch the DataVolume download progress
 kubectl get datavolume testvm -n default -w
