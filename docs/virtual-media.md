@@ -152,6 +152,14 @@ curl -i -X POST \
     }'
 ```
 
+!!! note "Ejecting before re-inserting"
+
+    `InsertMedia` and `EjectMedia` are Redfish POST actions, which are
+    non-idempotent by definition. If media is already inserted, call
+    `VirtualMedia.EjectMedia` before issuing another `VirtualMedia.InsertMedia`
+    request. Calling `InsertMedia` again while media is already attached is
+    undefined behavior and should not be used as a retry or polling mechanism.
+
 ## Booting from Virtual Media
 
 After inserting virtual media, a DataVolume is created and the ISO image begins downloading. Once the download is complete, configure the VM to boot from the CD-ROM and restart it:
