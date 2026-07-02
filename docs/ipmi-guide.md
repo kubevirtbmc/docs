@@ -6,6 +6,11 @@ This guide covers using IPMI (Intelligent Platform Management Interface) with Ku
 
 IPMI is a standardized UDP-based protocol for chassis control. KubeVirtBMC implements IPMI chassis commands for power management and boot device configuration.
 
+!!! note "IPMI Capability"
+
+    In the new version, we have support for dual-stack IPMI v1.5 (RMCP) and v2.0 (RMCP+).
+    Therefore, you can use either `ipmitool -I lan` or `ipmitool -I lanplus`.
+
 **Service Endpoint:**
 ```
 <vm-name>-virtbmc.<namespace>.svc.cluster.local:623
@@ -54,7 +59,7 @@ export HOSTNAME="testvm-virtbmc.default.svc.cluster.local"  # <vmbmc-svc-name>.<
 Then use the environment variables in all ipmitool commands:
 
 ```bash
-ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" <command>
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" <command>
 ```
 
 Delete the pod when done:
@@ -68,7 +73,7 @@ kubectl delete pods ipmitool
 ### Power Status
 
 ```bash
-ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power status
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power status
 ```
 
 #### **Output:**
@@ -78,54 +83,69 @@ ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power status
 ### Power On
 
 ```bash
-ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power on
-
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power on
 ```
 
-### Power Off (Graceful)
+### Power Off (Forceful)
 
 ```bash
-ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power off
-
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power off
 ```
 
-Sends ACPI shutdown signal. VM must support ACPI for graceful shutdown.
+Immediate power down without OS notification.
+
+### Power Off (Graceful / ACPI Soft Shutdown)
+
+```bash
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power soft
+```
+
+Sends ACPI shutdown request to the guest OS for a graceful stop. Requires ACPI support in the guest.
 
 ### Power Cycle
 
 ```bash
-ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power cycle
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power cycle
 ```
 
-Powers off, waits briefly, then powers on.
+Forces the VM to power off then immediately power back on.
 
+### Hard Reset
+
+```bash
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power reset
+```
+
+Forcefully resets the VM without cutting power, keeping it running.
 
 ### Power Commands Summary
 
 | Command | Description | Graceful |
 |---------|-------------|----------|
 | `power on` | Start VM | N/A |
-| `power off` | Shutdown VM | Yes |
-| `power cycle` | Off then On | Partial |
+| `power off` | Force stop VM (immediate) | No |
+| `power soft` | Graceful shutdown via ACPI | Yes |
+| `power cycle` | Force off then on | No |
+| `power reset` | Force reset without power off | No |
 
 ## Boot Device Configuration
 
 ### Set Boot to PXE
 
 ```bash
-ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev pxe
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev pxe
 ```
 
 ### Set Boot to Disk
 
 ```bash
-ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev disk
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev disk
 ```
 
 ### Set Boot to CD-ROM
 
 ```bash
-ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev cdrom
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev cdrom
 ```
 
 ### Supported Boot Devices
