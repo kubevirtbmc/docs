@@ -20,7 +20,7 @@ IPMI is a standardized UDP-based protocol for chassis control. KubeVirtBMC imple
         enabled: true
     ```
 
-    **Recommendation:** For production use, we recommend using the [Redfish API](redfish-guide.md) which provides better security and modern RESTful access.
+    **Recommendation:** For production use, we recommend using the [Redfish API](redfish-guide.md) which provides modern RESTful access.
 
 ## Accessing IPMI
 
