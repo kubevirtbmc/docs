@@ -11,10 +11,7 @@ IPMI is a standardized UDP-based protocol for chassis control. KubeVirtBMC imple
 <vm-name>-virtbmc.<namespace>.svc.cluster.local:623
 ```
 
-!!! note "IPMI Security and IPMI Toggle"
-    IPMI support in KubeVirtBMC currently only supports IPMI v1, which is rarely used nowadays. The underlying IPMI library dependency is unmaintained, raising security concerns.
-
-    **Authentication Limitation:** Since IPMI is a UDP-based protocol without a backend server for authentication, any username and password combination will be accepted. Credentials are validated at the protocol level by the IPMI library, but there is no server-side authentication mechanism. This is a fundamental limitation of the IPMI protocol implementation in KubeVirtBMC.
+!!! note "IPMI Toggle"
 
     **IPMI Toggle:** IPMI is disabled by default. To enable IPMI, set `spec.ipmi.enabled` to `true` in the VirtualMachineBMC resource:
     ```yaml
@@ -23,7 +20,7 @@ IPMI is a standardized UDP-based protocol for chassis control. KubeVirtBMC imple
         enabled: true
     ```
 
-    **Recommendation:** For production use, we recommend using the [Redfish API](redfish-guide.md) which provides better security, proper authentication, and modern RESTful access.
+    **Recommendation:** For production use, we recommend using the [Redfish API](redfish-guide.md) which provides modern RESTful access.
 
 ## Accessing IPMI
 
@@ -42,16 +39,28 @@ kubectl run ipmitool \
 kubectl exec -it ipmitool -- /bin/sh
 ```
 
-Delete the pod: 
+Inside the pod, set environment variables for reuse:
+
+```bash
+export USERNAME="admin"
+export PASSWORD="admin123"
+export HOSTNAME="testvm-virtbmc.default.svc.cluster.local"  # <vmbmc-svc-name>.<namespace>.svc.cluster.local
+```
+
+!!! note
+
+    The authentication credentials are retrieved from Secret configurations.
+
+Then use the environment variables in all ipmitool commands:
+
+```bash
+ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" <command>
+```
+
+Delete the pod when done:
 
 ```bash
 kubectl delete pods ipmitool
-```
-
-Inside the pod, use the service DNS name:
-
-```bash
-ipmitool -I lan -U admin -P password -H <serviceName>.<serviceNamespace>.svc.cluster.local power <command>
 ```
 
 ## Power Management
@@ -59,7 +68,7 @@ ipmitool -I lan -U admin -P password -H <serviceName>.<serviceNamespace>.svc.clu
 ### Power Status
 
 ```bash
-ipmitool -I lan -U admin -P password -H testvm-virtbmc.default.svc.cluster.local power status
+ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power status
 ```
 
 #### **Output:**
@@ -69,14 +78,14 @@ ipmitool -I lan -U admin -P password -H testvm-virtbmc.default.svc.cluster.local
 ### Power On
 
 ```bash
-ipmitool -I lan -U admin -P password -H testvm-virtbmc.default.svc.cluster.local power on
+ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power on
 
 ```
 
 ### Power Off (Graceful)
 
 ```bash
-ipmitool -I lan -U admin -P password -H testvm-virtbmc.default.svc.cluster.local power off
+ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power off
 
 ```
 
@@ -85,7 +94,7 @@ Sends ACPI shutdown signal. VM must support ACPI for graceful shutdown.
 ### Power Cycle
 
 ```bash
-ipmitool -I lan -U admin -P password -H testvm-virtbmc.default.svc.cluster.local power cycle
+ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" power cycle
 ```
 
 Powers off, waits briefly, then powers on.
@@ -104,19 +113,19 @@ Powers off, waits briefly, then powers on.
 ### Set Boot to PXE
 
 ```bash
-ipmitool -I lan -U admin -P password -H testvm-virtbmc.default.svc.cluster.local chassis bootdev pxe
+ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev pxe
 ```
 
 ### Set Boot to Disk
 
 ```bash
-ipmitool -I lan -U admin -P password -H testvm-virtbmc.default.svc.cluster.local chassis bootdev disk
+ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev disk
 ```
 
 ### Set Boot to CD-ROM
 
 ```bash
-ipmitool -I lan -U admin -P password -H testvm-virtbmc.default.svc.cluster.local chassis bootdev cdrom
+ipmitool -I lan -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev cdrom
 ```
 
 ### Supported Boot Devices
@@ -130,4 +139,3 @@ ipmitool -I lan -U admin -P password -H testvm-virtbmc.default.svc.cluster.local
 ## Next Steps
 
 - Read the [Redfish Guide](redfish-guide.md) for RESTful API access
-
