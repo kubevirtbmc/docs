@@ -1,0 +1,49 @@
+name: Deploy versioned docs
+
+# Pushes to main deploy the rolling "dev" version so doc PRs no longer need
+# to wait on a KubeVirtBMC release. Pushing a version tag (e.g. v0.3.0) cuts
+# a "stable" snapshot and promotes it to the default landing version.
+on:
+  push:
+    branches:
+    - main
+    tags:
+    - 'v*.*.*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        cache: pip
+        cache-dependency-path: requirements.txt
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+    - name: Configure git identity
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+    - name: Fetch existing gh-pages branch
+      run: git fetch origin gh-pages --depth=1 || true
+    - name: Deploy dev version
+      if: github.ref == 'refs/heads/main'
+      run: mike deploy --push --update-aliases dev
+    - name: Deploy stable version
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        mike deploy --push --update-aliases "${GITHUB_REF_NAME}" stable
+        mike set-default --push stable

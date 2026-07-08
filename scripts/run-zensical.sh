@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# Script to install Zensical and run the live server using a virtual environment.
-# Uses zensical.toml in the project root; see https://zensical.org/
+# Script to install Zensical/mike and run the multi-version live server using
+# a virtual environment. Uses zensical.toml in the project root, and deploys
+# the local working tree as the "dev" version so it shows up alongside any
+# other versions already committed to the local gh-pages branch.
+# See https://zensical.org/ and https://zensical.org/docs/setup/versioning/
 
 set -e
 
@@ -26,9 +29,18 @@ echo "Upgrading pip..."
 pip install --upgrade pip
 
 echo ""
-echo "Installing Zensical..."
-pip install zensical
+echo "Installing Zensical and mike..."
+pip install -r requirements.txt
+
+if ! git config user.email > /dev/null 2>&1; then
+    git config user.name "Local Docs Preview"
+    git config user.email "docs-preview@local"
+fi
 
 echo ""
-echo "Starting Zensical server (uses zensical.toml)..."
-zensical serve
+echo "Building local 'dev' preview version with mike..."
+mike deploy --update-aliases dev
+
+echo ""
+echo "Starting mike server (multi-version preview, uses zensical.toml)..."
+mike serve
