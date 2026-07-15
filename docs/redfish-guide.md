@@ -233,6 +233,7 @@ curl -i -X PATCH \
 ### Set Boot to Disk
 
 ```bash
+# One-time
 curl -i -X PATCH \
     -H "Content-Type: application/json" \
     -H "X-Auth-Token: $TOKEN" \
@@ -243,11 +244,24 @@ curl -i -X PATCH \
             "BootSourceOverrideEnabled": "Once"
         }
     }'
+
+# Continuous
+curl -i -X PATCH \
+    -H "Content-Type: application/json" \
+    -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 \
+    -d '{
+        "Boot": {
+            "BootSourceOverrideTarget": "Hdd",
+            "BootSourceOverrideEnabled": "Continuous"
+        }
+    }'
 ```
 
-### Set Boot to CD-ROM (One-time)
+### Set Boot to CD-ROM
 
 ```bash
+# One-time
 curl -i -X PATCH \
     -H "Content-Type: application/json" \
     -H "X-Auth-Token: $TOKEN" \
@@ -258,9 +272,69 @@ curl -i -X PATCH \
             "BootSourceOverrideEnabled": "Once"
         }
     }'
+
+# Continuous
+curl -i -X PATCH \
+    -H "Content-Type: application/json" \
+    -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 \
+    -d '{
+        "Boot": {
+            "BootSourceOverrideTarget": "Cd",
+            "BootSourceOverrideEnabled": "Continuous"
+        }
+    }'
 ```
 
-### Set Boot Mode
+### Disable Boot Override
+
+Clear any pending boot device override and restore the VM's default boot order:
+
+```bash
+curl -i -X PATCH \
+    -H "Content-Type: application/json" \
+    -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 \
+    -d '{
+        "Boot": {
+            "BootSourceOverrideEnabled": "Disabled"
+        }
+    }'
+```
+
+### Set Boot Device with Firmware Mode
+
+You can combine boot device override and firmware mode (UEFI/Legacy) in a single request:
+
+```bash
+# PXE one-shot + UEFI
+curl -i -X PATCH \
+    -H "Content-Type: application/json" \
+    -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 \
+    -d '{
+        "Boot": {
+            "BootSourceOverrideTarget": "Pxe",
+            "BootSourceOverrideEnabled": "Once",
+            "BootSourceOverrideMode": "UEFI"
+        }
+    }'
+
+# HDD continuous + Legacy
+curl -i -X PATCH \
+    -H "Content-Type: application/json" \
+    -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 \
+    -d '{
+        "Boot": {
+            "BootSourceOverrideTarget": "Hdd",
+            "BootSourceOverrideEnabled": "Continuous",
+            "BootSourceOverrideMode": "Legacy"
+        }
+    }'
+```
+
+### Set Boot Mode (Firmware Only)
 
 ```bash
 # UEFI mode
@@ -285,6 +359,62 @@ curl -i -X PATCH \
 | `BootSourceOverrideTarget` | `Pxe`, `Hdd`, `Cd` | Boot device |
 | `BootSourceOverrideEnabled` | `Once`, `Continuous`, `Disabled` | Override behavior |
 | `BootSourceOverrideMode` | `Legacy`, `UEFI` | Boot mode |
+
+### One-Shot Boot and In-Guest Reboot
+
+When using `"Once"` for `BootSourceOverrideEnabled`, the boot order override is applied to the KubeVirt VirtualMachine for a single boot. However, if the guest OS triggers a reboot (e.g., after completing an OS installation), KubeVirt's default behavior is to silently reboot the VirtualMachineInstance (VMI) without recreating it. This means the VirtualMachine's updated boot order may not be re-applied to the VMI after the in-guest reboot, and the VM may boot from its default device instead.
+
+To ensure the one-shot boot order survives in-guest reboots, configure the KubeVirt VirtualMachine's `rebootPolicy` to `Terminate`. This causes the VMI to be terminated on guest reboot, allowing the VM controller to recreate the VMI with the updated boot order configuration.
+
+!!! note "KubeVirt version requirement"
+
+    The `rebootPolicy` field was introduced in KubeVirt 1.8.0 ([kubevirt/kubevirt#16579](https://github.com/kubevirt/kubevirt/pull/16579)). It requires the `RebootPolicy` feature gate to be enabled in the KubeVirt configuration.
+
+**Example VirtualMachine with rebootPolicy:**
+
+```yaml
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: testvm
+spec:
+  runStrategy: Always
+  template:
+    spec:
+      domain:
+        rebootPolicy: Terminate  # Terminate VMI on guest reboot
+        devices:
+          disks:
+          - name: containerdisk
+            disk:
+              bus: virtio
+        resources:
+          requests:
+            memory: 64Mi
+      volumes:
+      - name: containerdisk
+        containerDisk:
+          image: quay.io/kubevirt/cirros-container-disk-demo
+```
+
+!!! warning
+
+    When `rebootPolicy` is set to `Terminate`, the VMI is terminated and recreated on every guest reboot. This may cause a brief interruption and should only be used when you need boot order changes to persist across in-guest reboots.
+
+### Verify RebootPolicy Feature Gate
+
+Check that the `RebootPolicy` feature gate is enabled:
+
+```bash
+kubectl get kubevirt kubevirt -n kubevirt -o yaml | grep RebootPolicy
+```
+
+If it is not enabled, patch the KubeVirt resource:
+
+```bash
+kubectl patch kubevirt kubevirt -n kubevirt --type merge -p \
+  '{"spec":{"configuration":{"developerConfiguration":{"featureGates":["RebootPolicy"]}}}}'
+```
 
 ## System Information
 

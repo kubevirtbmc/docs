@@ -133,19 +133,49 @@ Forcefully resets the VM without cutting power, keeping it running.
 ### Set Boot to PXE
 
 ```bash
+# One-shot (default)
 ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev pxe
+
+# Persistent
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev pxe options=persistent
+
+# One-shot + UEFI
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev pxe options=efiboot
+
+# Persistent + UEFI
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev pxe options=persistent,efiboot
 ```
 
 ### Set Boot to Disk
 
 ```bash
+# One-shot (default)
 ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev disk
+
+# Persistent
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev disk options=persistent
+
+# One-shot + UEFI
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev disk options=efiboot
+
+# Persistent + UEFI
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev disk options=persistent,efiboot
 ```
 
 ### Set Boot to CD-ROM
 
 ```bash
+# One-shot (default)
 ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev cdrom
+
+# Persistent
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev cdrom options=persistent
+
+# One-shot + UEFI
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev cdrom options=efiboot
+
+# Persistent + UEFI
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev cdrom options=persistent,efiboot
 ```
 
 ### Supported Boot Devices
@@ -155,6 +185,69 @@ ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev
 | `pxe` | Network boot (PXE) |
 | `disk` | Boot from disk |
 | `cdrom` | Boot from CD-ROM |
+
+### Boot Options
+
+`chassis bootdev` supports the following `options=` flags:
+
+| Option | Description |
+|--------|-------------|
+| *(none)* | One-shot override (default). The device is used for a single boot, then the VM reverts to its default boot order. |
+| `persistent` | Persistent override. The boot device override persists across multiple boots. Equivalent to Redfish `BootSourceOverrideEnabled: "Continuous"`. |
+| `efiboot` | UEFI firmware boot. Sets the boot mode to UEFI. Omit for legacy BIOS mode. |
+
+Multiple options can be combined with commas, e.g. `options=persistent,efiboot`.
+
+!!! warning "ipmitool version requirement for combined options"
+
+    When combining `persistent` with `efiboot` (e.g. `options=persistent,efiboot`), make sure the ipmitool client is **v1.8.19 or later** (check with `ipmitool -V`). Older versions have a bug in parsing multiple `options=` values ([ipmitool/ipmitool#163](https://github.com/ipmitool/ipmitool/issues/163)): only one of the combined flags is sent to the BMC. For example, a `persistent,efiboot` request may be sent without the persistent flag, so the override takes effect as one-shot instead of persistent (`status.bootOverride.mode` shows `Oneshot` instead of `Persistent`).
+
+    On an older ipmitool, set the boot flags with a `raw` command instead. This is the same workaround used by [OpenStack Ironic](https://bugs.launchpad.net/ironic/+bug/1611306) and works with any ipmitool version. It sends a Set System Boot Options request (NetFn `0x00`, Cmd `0x08`) for the boot flags parameter `0x05` (see Table 28-14 "Boot Option Parameters" in the IPMI v2.0 specification):
+
+    ```bash
+    # data byte 1: 0xe0 = boot flags valid + persistent + EFI (use 0xa0 for one-shot + EFI)
+    # data byte 2: boot device selector — pxe=0x04, disk=0x08, cdrom=0x14
+    ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" raw 0x00 0x08 0x05 0xe0 0x04 0x00 0x00 0x00
+    ```
+
+### Read Back Boot Flags
+
+`chassis bootparam get 5` (Get System Boot Options, boot flags parameter — see Table 28-14 "Boot Option Parameters" in the IPMI v2.0 specification) reads back the current boot device override:
+
+```bash
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootparam get 5
+```
+
+#### **Output:**
+```
+Boot parameter version: 1
+Boot parameter 5 is valid/unlocked
+Boot parameter data: 8000040000
+ Boot Flags :
+   - Boot Flag Valid
+   - Options apply to only next boot
+   - BIOS PC Compatible (legacy) boot
+   - Force PXE
+```
+
+
+### Clear Boot Override
+
+Clear any pending boot device override and restore the VM's default boot order:
+
+```bash
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev none
+```
+
+### One-Shot Boot and In-Guest Reboot
+
+When using one-shot boot override (the default without `options=persistent`), the VM boots from the specified device once, then reverts to its default boot order. However, if the guest OS triggers a reboot (e.g., after completing an OS installation), KubeVirt's default behavior is to silently reboot the VirtualMachineInstance (VMI) without recreating it. This means the boot device override may not be re-applied to the VMI, and the VM may boot from its default device instead.
+
+To ensure the boot device override survives in-guest reboots, configure the KubeVirt VirtualMachine's `rebootPolicy` to `Terminate`. This causes the VMI to be terminated on guest reboot, allowing the VM controller to recreate the VMI with the updated boot order.
+
+!!! note "KubeVirt version requirement"
+
+    The `rebootPolicy` field was introduced in KubeVirt 1.8.0 ([kubevirt/kubevirt#16579](https://github.com/kubevirt/kubevirt/pull/16579)). It requires the `RebootPolicy` feature gate to be enabled in the KubeVirt configuration. See the [Redfish Guide](redfish-guide.md#one-shot-boot-and-in-guest-reboot) for a complete example.
 
 ## Next Steps
 
