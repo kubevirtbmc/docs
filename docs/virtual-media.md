@@ -203,7 +203,7 @@ curl -i -X POST \
 
 !!! note "In-guest reboot handling"
 
-    When using one-shot boot (`"Once"`) to boot from virtual media, the boot order override may be lost if the guest OS triggers a reboot (e.g., after an installer finishes). To ensure the one-shot CD-ROM boot survives in-guest reboots, configure `rebootPolicy: Terminate` on the KubeVirt VirtualMachine. See the [Redfish Guide](redfish-guide.md#one-shot-boot-and-in-guest-reboot) for details. This requires KubeVirt 1.8.0+ with the `RebootPolicy` feature gate enabled.
+    If the guest OS reboots itself (e.g., an installer rebooting after it finishes), KubeVirt by default restarts the guest inside the existing VMI, which still carries the CD-ROM-first boot order it was created with — so the VM boots from the virtual media again instead of from the freshly installed disk. Setting `rebootPolicy: Terminate` on the KubeVirt VirtualMachine makes guest reboots recreate the VMI from the VM template, which KubeVirtBMC has already restored to the default boot order when the one-shot was consumed, so the VM boots from disk as expected. See the [Redfish Guide](redfish-guide.md#one-shot-boot-and-in-guest-reboot) for details. This requires KubeVirt 1.8.0+ with the `RebootPolicy` feature gate enabled.
 
 ### Request Parameters
 

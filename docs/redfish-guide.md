@@ -362,9 +362,14 @@ curl -i -X PATCH \
 
 ### One-Shot Boot and In-Guest Reboot
 
-When using `"Once"` for `BootSourceOverrideEnabled`, the boot order override is applied to the KubeVirt VirtualMachine for a single boot. However, if the guest OS triggers a reboot (e.g., after completing an OS installation), KubeVirt's default behavior is to silently reboot the VirtualMachineInstance (VMI) without recreating it. This means the VirtualMachine's updated boot order may not be re-applied to the VMI after the in-guest reboot, and the VM may boot from its default device instead.
+When using `"Once"` for `BootSourceOverrideEnabled`, KubeVirtBMC writes the boot order override to the KubeVirt VirtualMachine's template, and it takes effect the next time a VirtualMachineInstance (VMI) is created. As soon as a new VMI appears, KubeVirtBMC restores the original boot order in the template, completing the one-shot.
 
-To ensure the one-shot boot order survives in-guest reboots, configure the KubeVirt VirtualMachine's `rebootPolicy` to `Terminate`. This causes the VMI to be terminated on guest reboot, allowing the VM controller to recreate the VMI with the updated boot order configuration.
+KubeVirt does not live-apply template changes to a running VMI, and by default an in-guest reboot does not recreate the VMI either — the guest simply restarts with the configuration the VMI was created with. This has two consequences:
+
+- A one-shot override set on a running VM is ignored by an in-guest reboot: the override only exists in the template, so the VM boots from its default devices. Only a BMC-initiated reset or power cycle applies it.
+- Once the VM has booted from the override device, an in-guest reboot (e.g., an OS installer rebooting when it finishes) boots from the override device again, because the VMI still carries the boot order it was created with — even though KubeVirtBMC has already restored the template.
+
+Setting the KubeVirt VirtualMachine's `rebootPolicy` to `Terminate` makes guest reboots terminate the VMI, so the VM controller recreates it from the current template and in-guest reboots behave the same as BMC-initiated resets.
 
 !!! note "KubeVirt version requirement"
 
@@ -399,7 +404,7 @@ spec:
 
 !!! warning
 
-    When `rebootPolicy` is set to `Terminate`, the VMI is terminated and recreated on every guest reboot. This may cause a brief interruption and should only be used when you need boot order changes to persist across in-guest reboots.
+    With `rebootPolicy: Terminate`, every in-guest reboot becomes a full VMI recreation, which takes noticeably longer than a normal guest reboot — the virt-launcher pod is recreated and the guest boots from scratch (seconds to minutes, depending on scheduling). KubeVirtBMC itself is unaffected and keeps serving IPMI/Redfish requests, but while the new VMI is starting the VM reports as not ready, so power status reads (`chassis power status`, Redfish `PowerState`) report the host as off. Enable this only when you need boot order changes to apply across in-guest reboots.
 
 ### Verify RebootPolicy Feature Gate
 

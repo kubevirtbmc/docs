@@ -218,7 +218,8 @@ Multiple options can be combined with commas, e.g. `options=persistent,efiboot`.
 ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootparam get 5
 ```
 
-#### **Output:**
+This produces output similar to:
+
 ```
 Boot parameter version: 1
 Boot parameter 5 is valid/unlocked
@@ -241,9 +242,9 @@ ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" chassis bootdev
 
 ### One-Shot Boot and In-Guest Reboot
 
-When using one-shot boot override (the default without `options=persistent`), the VM boots from the specified device once, then reverts to its default boot order. However, if the guest OS triggers a reboot (e.g., after completing an OS installation), KubeVirt's default behavior is to silently reboot the VirtualMachineInstance (VMI) without recreating it. This means the boot device override may not be re-applied to the VMI, and the VM may boot from its default device instead.
+When using one-shot boot override (the default without `options=persistent`), the VM boots from the specified device once, then KubeVirtBMC restores the VM's default boot order. This restore is tied to VMI recreation: by default, an in-guest reboot restarts the guest inside the existing VirtualMachineInstance (VMI), which keeps the boot order it was created with. So if the guest OS reboots itself (e.g., after completing an OS installation), the VM boots from the override device again instead of the default boot order — and a one-shot override set on a running VM is ignored entirely by an in-guest reboot, since it only exists in the VM template.
 
-To ensure the boot device override survives in-guest reboots, configure the KubeVirt VirtualMachine's `rebootPolicy` to `Terminate`. This causes the VMI to be terminated on guest reboot, allowing the VM controller to recreate the VMI with the updated boot order.
+Setting the KubeVirt VirtualMachine's `rebootPolicy` to `Terminate` makes guest reboots terminate the VMI, so the VM controller recreates it from the current template and in-guest reboots behave the same as BMC-initiated power actions.
 
 !!! note "KubeVirt version requirement"
 
