@@ -128,6 +128,18 @@ Forcefully resets the VM without cutting power, keeping it running.
 | `power cycle` | Force off then on | No |
 | `power reset` | Force reset without power off | No |
 
+## Transitional VM State Handling (IPMI Retry Signal)
+
+When KubeVirt is between asynchronous lifecycle steps (e.g., the VM/VMI is still starting or stopping), `virtbmc` must not treat those transitional windows as guaranteed success.
+
+Current behavior:
+
+- The agent uses a **Try-Then-Verify** approach to avoid swallowing ambiguous “already running/already stopped” situations.
+- If the VM is still transitional and the requested operation is **not yet reflected** in the final VM power state, `virtbmc` returns a **retryable IPMI error**:
+  - Completion code: **Node Busy (0xC0)**
+
+Clients that implement “retry on Node Busy” (notably Ironic) can re-issue the power action until the VM state converges.
+
 ## Boot Device Configuration
 
 ### Set Boot to PXE
