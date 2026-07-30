@@ -35,7 +35,7 @@ Since IPMI uses UDP and requires cluster network access, run an IPMI client pod:
 
 ```bash
 kubectl run ipmitool \
-    --image=mikeynap/ipmitool \
+    --image=kubevirtbmc/ipmitool \
     --restart=Never \
     --command -- sleep 9999999
 ```
