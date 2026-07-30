@@ -190,6 +190,19 @@ curl -i -X POST \
 | `GracefulRestart` | Restart with ACPI | Yes |
 | `ForceRestart` | Immediate restart | No |
 
+## Transitional VM State Handling (Redfish Retry Signal)
+
+For power transition requests (e.g., `ResetType: On/Off/ForceRestart`), `virtbmc` must not treat KubeVirt asynchronous lifecycle gaps as a guaranteed success.
+
+Current behavior:
+
+- The agent uses **Try-Then-Verify** to avoid swallowing ambiguous “power already in desired state” situations.
+- If the VM is still in a transitional state where the operation is **not yet reflected** in the final VM power state, `virtbmc` returns a retryable Redfish signal:
+  - HTTP status: **500**
+  - Error message pattern: **iLO / InvalidOperationForSystemState** (power transition in progress)
+
+Clients that implement “retry on iLO InvalidOperationForSystemState” (notably sushy/Ironic) can re-issue the power action until the VM state converges.
+
 ## Boot Configuration
 
 ### Get Current Boot Configuration
