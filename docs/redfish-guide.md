@@ -233,6 +233,7 @@ curl -i -X PATCH \
 ### Set Boot to Disk
 
 ```bash
+# One-time
 curl -i -X PATCH \
     -H "Content-Type: application/json" \
     -H "X-Auth-Token: $TOKEN" \
@@ -243,11 +244,24 @@ curl -i -X PATCH \
             "BootSourceOverrideEnabled": "Once"
         }
     }'
+
+# Continuous
+curl -i -X PATCH \
+    -H "Content-Type: application/json" \
+    -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 \
+    -d '{
+        "Boot": {
+            "BootSourceOverrideTarget": "Hdd",
+            "BootSourceOverrideEnabled": "Continuous"
+        }
+    }'
 ```
 
-### Set Boot to CD-ROM (One-time)
+### Set Boot to CD-ROM
 
 ```bash
+# One-time
 curl -i -X PATCH \
     -H "Content-Type: application/json" \
     -H "X-Auth-Token: $TOKEN" \
@@ -258,9 +272,69 @@ curl -i -X PATCH \
             "BootSourceOverrideEnabled": "Once"
         }
     }'
+
+# Continuous
+curl -i -X PATCH \
+    -H "Content-Type: application/json" \
+    -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 \
+    -d '{
+        "Boot": {
+            "BootSourceOverrideTarget": "Cd",
+            "BootSourceOverrideEnabled": "Continuous"
+        }
+    }'
 ```
 
-### Set Boot Mode
+### Disable Boot Override
+
+Clear any pending boot device override and restore the VM's default boot order:
+
+```bash
+curl -i -X PATCH \
+    -H "Content-Type: application/json" \
+    -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 \
+    -d '{
+        "Boot": {
+            "BootSourceOverrideEnabled": "Disabled"
+        }
+    }'
+```
+
+### Set Boot Device with Firmware Mode
+
+You can combine boot device override and firmware mode (UEFI/Legacy) in a single request:
+
+```bash
+# PXE one-shot + UEFI
+curl -i -X PATCH \
+    -H "Content-Type: application/json" \
+    -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 \
+    -d '{
+        "Boot": {
+            "BootSourceOverrideTarget": "Pxe",
+            "BootSourceOverrideEnabled": "Once",
+            "BootSourceOverrideMode": "UEFI"
+        }
+    }'
+
+# HDD continuous + Legacy
+curl -i -X PATCH \
+    -H "Content-Type: application/json" \
+    -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 \
+    -d '{
+        "Boot": {
+            "BootSourceOverrideTarget": "Hdd",
+            "BootSourceOverrideEnabled": "Continuous",
+            "BootSourceOverrideMode": "Legacy"
+        }
+    }'
+```
+
+### Set Boot Mode (Firmware Only)
 
 ```bash
 # UEFI mode
@@ -285,6 +359,67 @@ curl -i -X PATCH \
 | `BootSourceOverrideTarget` | `Pxe`, `Hdd`, `Cd` | Boot device |
 | `BootSourceOverrideEnabled` | `Once`, `Continuous`, `Disabled` | Override behavior |
 | `BootSourceOverrideMode` | `Legacy`, `UEFI` | Boot mode |
+
+### One-Shot Boot and In-Guest Reboot
+
+When using `"Once"` for `BootSourceOverrideEnabled`, KubeVirtBMC writes the boot order override to the KubeVirt VirtualMachine's template, and it takes effect the next time a VirtualMachineInstance (VMI) is created. As soon as a new VMI appears, KubeVirtBMC restores the original boot order in the template, completing the one-shot.
+
+KubeVirt does not live-apply template changes to a running VMI, and by default an in-guest reboot does not recreate the VMI either — the guest simply restarts with the configuration the VMI was created with. This has two consequences:
+
+- A one-shot override set on a running VM is ignored by an in-guest reboot: the override only exists in the template, so the VM boots from its default devices. Only a BMC-initiated reset or power cycle applies it.
+- Once the VM has booted from the override device, an in-guest reboot (e.g., an OS installer rebooting when it finishes) boots from the override device again, because the VMI still carries the boot order it was created with — even though KubeVirtBMC has already restored the template.
+
+Setting the KubeVirt VirtualMachine's `rebootPolicy` to `Terminate` makes guest reboots terminate the VMI, so the VM controller recreates it from the current template and in-guest reboots behave the same as BMC-initiated resets.
+
+!!! note "KubeVirt version requirement"
+
+    The `rebootPolicy` field was introduced in KubeVirt 1.8.0 ([kubevirt/kubevirt#16579](https://github.com/kubevirt/kubevirt/pull/16579)). It requires the `RebootPolicy` feature gate to be enabled in the KubeVirt configuration.
+
+**Example VirtualMachine with rebootPolicy:**
+
+```yaml
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: testvm
+spec:
+  runStrategy: Always
+  template:
+    spec:
+      domain:
+        rebootPolicy: Terminate  # Terminate VMI on guest reboot
+        devices:
+          disks:
+          - name: containerdisk
+            disk:
+              bus: virtio
+        resources:
+          requests:
+            memory: 64Mi
+      volumes:
+      - name: containerdisk
+        containerDisk:
+          image: quay.io/kubevirt/cirros-container-disk-demo
+```
+
+!!! warning
+
+    With `rebootPolicy: Terminate`, every in-guest reboot becomes a full VMI recreation, which takes noticeably longer than a normal guest reboot — the virt-launcher pod is recreated and the guest boots from scratch (seconds to minutes, depending on scheduling). KubeVirtBMC itself is unaffected and keeps serving IPMI/Redfish requests, but while the new VMI is starting the VM reports as not ready, so power status reads (`chassis power status`, Redfish `PowerState`) report the host as off. Enable this only when you need boot order changes to apply across in-guest reboots.
+
+### Verify RebootPolicy Feature Gate
+
+Check that the `RebootPolicy` feature gate is enabled:
+
+```bash
+kubectl get kubevirt kubevirt -n kubevirt -o yaml | grep RebootPolicy
+```
+
+If it is not enabled, patch the KubeVirt resource:
+
+```bash
+kubectl patch kubevirt kubevirt -n kubevirt --type merge -p \
+  '{"spec":{"configuration":{"developerConfiguration":{"featureGates":["RebootPolicy"]}}}}'
+```
 
 ## System Information
 
