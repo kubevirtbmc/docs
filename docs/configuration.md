@@ -21,7 +21,7 @@ If you want to use your own manager image, modify the image configuration:
 ```yaml
 # Image configuration
 image:
-  repository: starbops/virtbmc-controller # Change to your own registry
+  repository: kubevirtbmc/virtbmc-controller # Change to your own registry
   pullPolicy: IfNotPresent
   tag: "v0.7.0"
 ```
@@ -31,7 +31,7 @@ If you want to use your own virtbmc image, pass the image via controller flags:
 ```yaml
 manager:
   args:
-    - --agent-image-name=starbops/virtbmc
+    - --agent-image-name=kubevirtbmc/virtbmc
     - --agent-image-tag=v0.7.0
 ```
 
