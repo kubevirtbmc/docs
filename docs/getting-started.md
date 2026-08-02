@@ -36,8 +36,7 @@ KubeVirtBMC requires KubeVirt to be installed in your cluster.
 **Install KubeVirt Operator:**
 
 ```bash
-export RELEASE=$(curl -s https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)
-echo $RELEASE
+export RELEASE=v1.8.4
 kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${RELEASE}/kubevirt-operator.yaml
 kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${RELEASE}/kubevirt-cr.yaml
 ```
