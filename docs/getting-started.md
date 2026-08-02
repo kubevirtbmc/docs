@@ -82,7 +82,7 @@ kubectl apply -f https://github.com/kubevirtbmc/kubevirtbmc/releases/download/<v
 **Option B: Helm Repository**
 
 ```bash
-helm repo add kubevirtbmc https://charts.zespre.com/
+helm repo add kubevirtbmc https://charts.kubevirtbmc.io/
 helm repo update
 helm upgrade --install kubevirtbmc kubevirtbmc/kubevirtbmc \
     --namespace=kubevirtbmc-system \

@@ -26,7 +26,7 @@ KubeVirtBMC provides:
 ## Quick Links
 
 * [GitHub Repository](https://github.com/kubevirtbmc/kubevirtbmc)
-* [Helm Chart](https://charts.zespre.com/)
+* [Helm Chart](https://charts.kubevirtbmc.io/)
 
 ## Next Steps
 
