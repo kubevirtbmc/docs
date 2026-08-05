@@ -31,7 +31,8 @@ nav = [
     { "IPMI Guide" = "ipmi-guide.md" },
     { "Redfish Guide" = "redfish-guide.md" },
     { "Virtual Media" = "virtual-media.md" }
-  ]}
+  ]},
+  { "Adopters" = "adopters.md" }
 ]
 
 # Theme: modern Zensical look (default)
