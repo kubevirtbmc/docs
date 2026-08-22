@@ -167,8 +167,8 @@ EOF
 # Check VirtualMachineBMC 
 kubectl get virtualmachinebmc test-bmc
 
-# Verify Deployment, Pod and Service were created
-kubectl get pods,services -l kubevirt.io/virtualmachinebmc-name=test-bmc
+# Verify Deployment and Service were created
+kubectl get pods,deployments,services -l kubevirt.io/virtualmachinebmc-name=test-bmc
 ```
 
 Expected output:
@@ -176,8 +176,11 @@ Expected output:
 NAME       VIRTUALMACHINE   SECRET       CLUSTERIP       SERVICEREADY
 test-bmc   testvm           bmc-secret   10.43.230.200   True
     
-NAME                 READY   STATUS    RESTARTS   AGE
-pod/testvm-virtbmc   1/1     Running   0          112s
+NAME                                   READY   STATUS    RESTARTS   AGE
+pod/testvm-virtbmc-xxxxxxxxxx-xxxxx   1/1     Running   0          112s
+
+NAME                               READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/testvm-virtbmc     1/1     1            1           112s
 
 NAME                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
 service/testvm-virtbmc   ClusterIP   10.43.230.200   <none>        623/UDP,80/TCP   112s
