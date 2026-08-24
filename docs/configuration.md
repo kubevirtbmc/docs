@@ -6,6 +6,7 @@ This guide covers advanced configuration options for KubeVirtBMC.
 
 - [Helm Chart Configuration](#helm-chart-configuration)
 - [Image Configuration](#image-configuration)
+- [Configuring the BMC Service Type](#configuring-the-bmc-service-type)
 - [Exposing Redfish Externally](#exposing-redfish-externally)
 - [Secret Management](#secret-management)
 
@@ -33,6 +34,85 @@ manager:
   args:
     - --agent-image-name=kubevirtbmc/virtbmc
     - --agent-image-tag=v0.7.0
+```
+
+## Configuring the BMC Service Type
+
+By default, KubeVirtBMC exposes each Virtual BMC through a `ClusterIP` Service, reachable only from inside the cluster. Set `spec.service.type` on the `VirtualMachineBMC` resource to `NodePort` or `LoadBalancer` to expose it externally without needing an Ingress or Gateway. Use `spec.service.labels` and `spec.service.annotations` to attach metadata consumed by cloud load balancer controllers, service meshes, or monitoring tooling.
+
+!!! note
+
+    Changing `spec.service.type` deletes and recreates the underlying Service, which changes its `ClusterIP` and any previously assigned `NodePort`/`LoadBalancer` address. Changing `spec.service.labels` or `spec.service.annotations` patches the existing Service in place and does not cause a recreation.
+
+### Example: LoadBalancer with Labels and Annotations
+
+This example provisions a `LoadBalancer` Service and attaches a custom label and annotation, e.g. to identify the owning team or feed metadata to your cloud provider's load balancer controller:
+
+```bash
+kubectl apply -f - <<EOF
+apiVersion: bmc.kubevirt.io/v1beta1
+kind: VirtualMachineBMC
+metadata:
+  name: test-bmc
+  namespace: default
+spec:
+  virtualMachineRef:
+    name: testvm
+  authSecretRef:
+    name: bmc-secret
+  service:
+    type: LoadBalancer
+    labels:
+      team: infra
+      app.kubernetes.io/part-of: kubevirtbmc
+    annotations:
+      example.com/owner: "infra-team"
+      example.com/environment: "production"
+EOF
+```
+
+Verify the Service and the resulting `VirtualMachineBMC` status once the cloud provider assigns an external IP:
+
+```bash
+kubectl get service testvm-virtbmc
+kubectl get virtualmachinebmc test-bmc -o jsonpath='{.status.loadBalancerIP}{"\n"}'
+```
+
+Expected output:
+
+```
+NAME              TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)          AGE
+testvm-virtbmc    LoadBalancer   10.43.230.200   203.0.113.10    623/UDP,80/TCP   2m
+
+203.0.113.10
+```
+
+### Example: NodePort
+
+```bash
+kubectl apply -f - <<EOF
+apiVersion: bmc.kubevirt.io/v1beta1
+kind: VirtualMachineBMC
+metadata:
+  name: test-bmc
+  namespace: default
+spec:
+  virtualMachineRef:
+    name: testvm
+  authSecretRef:
+    name: bmc-secret
+  service:
+    type: NodePort
+EOF
+```
+
+```bash
+kubectl get service testvm-virtbmc
+```
+
+```
+NAME             TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)                       AGE
+testvm-virtbmc   NodePort   10.43.230.200   <none>        623:31623/UDP,80:31080/TCP   2m
 ```
 
 ## Exposing Redfish Externally
