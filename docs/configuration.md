@@ -46,7 +46,7 @@ By default, KubeVirtBMC exposes each Virtual BMC through a `ClusterIP` Service, 
 
 ### Example: LoadBalancer with Labels and Annotations
 
-This example provisions a `LoadBalancer` Service and attaches a custom label and annotation, e.g. to identify the owning team or feed metadata to your cloud provider's load balancer controller:
+This example provisions a `LoadBalancer` Service and attaches a custom label plus an annotation consumed by your cloud provider's load balancer controller. For instance, [kube-vip](https://kube-vip.io/docs/usage/kubernetes-services/) reads the `kube-vip.io/loadbalancerIPs` annotation to assign a specific IP address to the Service:
 
 ```bash
 kubectl apply -f - <<EOF
@@ -66,12 +66,11 @@ spec:
       team: infra
       app.kubernetes.io/part-of: kubevirtbmc
     annotations:
-      example.com/owner: "infra-team"
-      example.com/environment: "production"
+      kube-vip.io/loadbalancerIPs: 192.168.0.101
 EOF
 ```
 
-Verify the Service and the resulting `VirtualMachineBMC` status once the cloud provider assigns an external IP:
+Verify the Service and the resulting `VirtualMachineBMC` status once kube-vip assigns the requested external IP:
 
 ```bash
 kubectl get service testvm-virtbmc
@@ -82,9 +81,9 @@ Expected output:
 
 ```
 NAME              TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)          AGE
-testvm-virtbmc    LoadBalancer   10.43.230.200   203.0.113.10    623/UDP,80/TCP   2m
+testvm-virtbmc    LoadBalancer   10.43.230.200   192.168.0.101   623/UDP,80/TCP   2m
 
-203.0.113.10
+192.168.0.101
 ```
 
 ### Example: NodePort
