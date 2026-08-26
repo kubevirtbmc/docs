@@ -44,6 +44,7 @@ spec:
     name: string  # Required
   ipmi:
     enabled: false  # Optional, defaults to false
+  storageClassName: string  # Optional, defaults to the cluster's default StorageClass
 ```
 
 #### Fields
@@ -55,6 +56,7 @@ spec:
 | `authSecretRef` | `LocalObjectReference` | Yes | Reference to the Secret containing BMC credentials |
 | `authSecretRef.name` | `string` | Yes | Name of the Secret resource |
 | `ipmi` | `IPMISpec` | No | IPMI configuration. When omitted, IPMI is disabled. |
+| `storageClassName` | `string` | No | StorageClass used for the DataVolume created on virtual media insert. When omitted, the cluster's default StorageClass is used. |
 
 ### IPMISpec
 
