@@ -173,7 +173,7 @@ kubectl get pods,services -l kubevirt.io/virtualmachinebmc-name=test-bmc
 
 Expected output:
 ```
-NAME       VIRTUALMACHINE   SECRET       CLUSTERIP       READY
+NAME       VIRTUALMACHINE   SECRET       CLUSTERIP       SERVICEREADY
 test-bmc   testvm           bmc-secret   10.43.230.200   True
     
 NAME                 READY   STATUS    RESTARTS   AGE

@@ -25,7 +25,7 @@ The Webhook Server provides admission control for VirtualMachineBMC resources th
 
 For each VirtualMachineBMC, the controller automatically creates:
 
-1. **Service** (ClusterIP): Exposes virtbmc Pod on ports 623 (UDP) for IPMI and 80 (TCP) for Redfish
+1. **Service**: Exposes virtbmc Pod on ports 623 (UDP) for IPMI and 80 (TCP) for Redfish. Defaults to type `ClusterIP`; configurable to `NodePort` or `LoadBalancer` via `spec.service.type` (see [API Reference](api-reference.md#bmcservicespec))
 2. **Pod**: Runs the virtbmc BMC emulator
 3. **ServiceAccount**: Created in the same namespace as the VirtualMachineBMC resource
 4. **RoleBinding**: Grants necessary RBAC permissions to the ServiceAccount for managing VirtualMachine resource
