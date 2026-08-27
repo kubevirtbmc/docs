@@ -15,7 +15,7 @@ This guide will help you get KubeVirtBMC up and running in your Kubernetes clust
 KubeVirtBMC requires cert-manager for webhook certificates and Redfish API TLS support.
 
 ```bash
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.19.2/cert-manager.yaml
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.21.1/cert-manager.yaml
 ```
 
 Wait for cert-manager to be ready:
@@ -36,7 +36,7 @@ KubeVirtBMC requires KubeVirt to be installed in your cluster.
 **Install KubeVirt Operator:**
 
 ```bash
-export RELEASE=v1.8.4
+export RELEASE=v1.9.0
 kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${RELEASE}/kubevirt-operator.yaml
 kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${RELEASE}/kubevirt-cr.yaml
 ```
