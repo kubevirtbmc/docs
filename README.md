@@ -20,6 +20,27 @@ To remove the virtual environment and generated site:
 make zensical-cleanup
 ```
 
+## Versioning
+
+This site publishes two versions so documentation PRs don't have to wait on a
+KubeVirtBMC release to merge:
+
+- **`dev`** — deployed automatically on every push to `main`. Use this for
+  docs about unreleased/in-progress features.
+- **`stable`** (default) — deployed by pushing a version tag (e.g. `v0.3.0`),
+  which snapshots `main` at that point and promotes it to the version served
+  at the site root.
+
+Deployment is handled by [mike](https://github.com/squidfunk/mike) (a
+Zensical-compatible fork) via `.github/workflows/deploy-docs.yml`. To preview
+versioning locally:
+
+```bash
+pip install -r requirements.txt
+mike deploy --update-aliases dev
+mike serve
+```
+
 ## Project links
 
 - [KubeVirtBMC on GitHub](https://github.com/kubevirtbmc/kubevirtbmc)

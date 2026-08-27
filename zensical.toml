@@ -5,7 +5,7 @@
 site_name = "KubeVirtBMC Documentation"
 site_description = "Out-of-band management for virtual machines on Kubernetes using IPMI and Redfish"
 site_author = "KubeVirtBMC Contributors"
-site_url = "https://docs.kubevirtbmc.io"
+site_url = "https://docs.kubevirtbmc.io/"
 site_dir = "site"
 docs_dir = "docs"
 copyright = "Copyright &copy; 2026 KubeVirtBMC Contributors"
@@ -65,6 +65,12 @@ primary = "blue"
 accent = "blue"
 toggle.icon = "lucide/moon"
 toggle.name = "Switch to light mode"
+
+# Versioning (deployed/managed by mike - see .github/workflows/deploy-docs.yml)
+[project.extra.version]
+provider = "mike"
+default = "stable"
+alias = true
 
 # Footer social links
 [[project.extra.social]]
