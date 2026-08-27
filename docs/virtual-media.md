@@ -97,6 +97,18 @@ EOF
 - Bus type should be `sata` (recommended) or `scsi`
 - Disk name can be any value (e.g., `cdrom`, `iso`, `dvd`)
 
+## Selecting a StorageClass
+
+By default, the DataVolume created on virtual media insert uses your cluster's
+default StorageClass. If your cluster has no default StorageClass, or you want
+virtual media images to land on a specific StorageClass, set
+`spec.storageClassName` on the `VirtualMachineBMC` resource:
+
+```yaml
+spec:
+  storageClassName: my-storage-class
+```
+
 ## Storage Overhead
 
 If you are using a storage backend with higher filesystem overhead
