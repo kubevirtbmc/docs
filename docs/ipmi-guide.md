@@ -140,6 +140,62 @@ Current behavior:
 
 Clients that implement “retry on Node Busy” (notably Ironic) can re-issue the power action until the VM state converges.
 
+## Device and Inventory Information
+
+### BMC Device Info
+
+```bash
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" mc info
+```
+
+Example output:
+
+```
+Device ID                 : 32
+Device Revision           : 1
+Firmware Revision         : 1.00
+IPMI Version              : 0.2
+Manufacturer ID           : 0
+Manufacturer Name         : Unknown
+Product ID                : 0 (0x0000)
+Product Name              : Unknown (0x00)
+Device Available          : yes
+Provides Device SDRs      : no
+Additional Device Support :
+    SDR Repository Device
+    FRU Inventory Device
+```
+
+`Additional Device Support` advertises the **SDR Repository Device** and **FRU Inventory Device** capabilities.
+
+### FRU Inventory
+
+```bash
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" fru list
+ipmitool -I lanplus -U "$USERNAME" -P "$PASSWORD" -H "$HOSTNAME" fru print 0
+```
+
+Example output (identical for both commands, as there is a single builtin FRU device):
+
+```
+FRU Device Description : Builtin FRU Device (ID 0)
+ Product Manufacturer  : KubeVirt
+ Product Name          : KubeVirtBMC
+ Product Version       : c935d5d2d6b11b345154916e339088c4a61e84ba
+ Product Serial        : default/testvm
+```
+
+| Field | Value |
+|-------|-------|
+| Product Manufacturer | `KubeVirt` |
+| Product Name | `KubeVirtBMC` |
+| Product Version | Git commit SHA of the virtbmc build |
+| Product Serial | VM identity in `<namespace>/<vm-name>` form |
+
+!!! note "FRU field length limit"
+
+    FRU fields are truncated to 63 bytes per the IPMI specification. Use the [Redfish API](redfish-guide.md#system-information) to read the full, untruncated VM identity (`SerialNumber`).
+
 ## Boot Device Configuration
 
 ### Set Boot to PXE

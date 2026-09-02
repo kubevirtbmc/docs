@@ -443,11 +443,46 @@ curl -H "X-Auth-Token: $TOKEN" \
     http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 | jq
 ```
 
+The system resource exposes the VM identity so clients can correlate the BMC with the KubeVirt VirtualMachine:
+
+```bash
+curl -s -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Systems/1 \
+    | jq '{Manufacturer, Model, Name, SerialNumber, SystemType}'
+```
+
+```json
+{
+  "Manufacturer": "KubeVirt",
+  "Model": "KubeVirt",
+  "Name": "default/testvm",
+  "SerialNumber": "default/testvm",
+  "SystemType": "Virtual"
+}
+```
+
+`Name` and `SerialNumber` carry the VM identity in `<namespace>/<vm-name>` form (untruncated; the [IPMI FRU](ipmi-guide.md#fru-inventory) equivalent is limited to 63 bytes).
+
 ### Get Manager Information
 
 ```bash
 curl -H "X-Auth-Token: $TOKEN" \
     http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Managers/BMC | jq
+```
+
+The manager's `FirmwareVersion` reports the Git commit SHA of the virtbmc build — the same value exposed as the FRU Product Version over IPMI:
+
+```bash
+curl -s -H "X-Auth-Token: $TOKEN" \
+    http://testvm-virtbmc.default.svc.cluster.local/redfish/v1/Managers/BMC \
+    | jq '{Model, FirmwareVersion}'
+```
+
+```json
+{
+  "Model": "KubeVirtBMC",
+  "FirmwareVersion": "c935d5d2d6b11b345154916e339088c4a61e84ba"
+}
 ```
 
 ## Next Steps
