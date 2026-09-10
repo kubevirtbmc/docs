@@ -104,6 +104,8 @@ curl -u admin:admin123 http://127.0.0.1:10080/redfish/v1/Systems/1
 | `--enable-ipmi` | `false` | Enable the IPMI simulator |
 | `--state-file` | `./<ns>_<vm>.json` | Where boot override state is persisted |
 | `--storage-class` | cluster default | StorageClass for virtual media DataVolumes |
+| `--volume-mode` | CDI default | Volume mode for virtual media DataVolumes: `block` or `filesystem` |
+| `--datavolume-size-margin` | `0` | Pad virtual media DataVolume size by this many percent (see [Volume Mode and Size Margin](virtual-media.md#volume-mode-and-size-margin)) |
 
 Credentials are always passed via the `BMC_USERNAME` and `BMC_PASSWORD` environment variables.
 
@@ -121,5 +123,5 @@ Delete the file to reset the BMC to its default boot behavior.
 
 - No `VirtualMachineBMC` CR, Deployment, Service, or Secret is created — you reach the agent directly at `--address` and its ports
 - Boot override state lives in the local state file instead of the CR status
-- The virtual media StorageClass comes from `--storage-class` instead of `spec.storageClassName`
+- Virtual media settings come from flags (`--storage-class`, `--volume-mode`, `--datavolume-size-margin`) instead of the `VirtualMachineBMC` CR spec and annotations
 - Nothing garbage-collects the agent; its lifecycle is yours to manage
