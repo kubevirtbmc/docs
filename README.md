@@ -20,6 +20,10 @@ To remove the virtual environment and generated site:
 make zensical-cleanup
 ```
 
+## Deploy previews
+
+Pull requests get a live, rendered preview build via [Netlify](https://docs.netlify.com/deploy/deploy-types/deploy-previews/), driven by `netlify.toml` (`zensical build`, publishing the `site` directory). This lets reviewers see the actual Zensical-rendered output instead of relying on the raw Markdown diff. Production continues to deploy to GitHub Pages via `.github/workflows/deploy-pages.yml`.
+
 ## Project links
 
 - [KubeVirtBMC on GitHub](https://github.com/kubevirtbmc/kubevirtbmc)
