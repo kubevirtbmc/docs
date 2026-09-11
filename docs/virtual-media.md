@@ -188,6 +188,57 @@ This pads the requested DataVolume size by the given percentage (30% in the
 example above). The annotation is absent by default (no padding); an invalid
 (non-integer) value is logged as a warning and also treated as no padding.
 
+## TLS for Private or Self-Signed HTTPS Images
+
+By default, an HTTPS image URL must present a certificate trusted by the
+public CA bundle. If your image server uses a certificate signed by a
+private or internal CA, for example, a metal3/Ironic virtual media
+server, configure TLS behavior under
+`spec.redfish.virtualMedia.tls` on the `VirtualMachineBMC` resource. This
+setting applies both when virtbmc checks the remote image's size before
+creating the DataVolume, and when CDI imports the image.
+
+### Trusting a Private CA
+
+Create a ConfigMap containing the CA certificate under the key `ca.pem`,
+in the same namespace as the `VirtualMachineBMC`:
+
+```bash
+kubectl create configmap my-image-server-ca \
+    --from-file=ca.pem=./ca.pem \
+    -n default
+```
+
+Then reference it:
+
+```yaml
+spec:
+  redfish:
+    virtualMedia:
+      tls:
+        caBundleConfigMapRef:
+          name: my-image-server-ca
+```
+
+### Skipping Certificate Verification
+
+TLS certificate verification can also be disabled entirely:
+
+```yaml
+spec:
+  redfish:
+    virtualMedia:
+      tls:
+        insecureSkipVerify: true
+```
+
+!!! warning
+
+    `insecureSkipVerify` disables TLS certificate verification entirely,
+    making the connection vulnerable to man-in-the-middle attacks. Prefer
+    `caBundleConfigMapRef` when possible, and only use
+    `insecureSkipVerify` in trusted network environments.
+
 ## Inserting Virtual Media
 
 ### Using Redfish API
@@ -275,6 +326,7 @@ curl -i -X POST \
 
 - HTTP URLs: `http://example.com/image.iso`
 - HTTPS URLs: `https://example.com/image.iso`
+- HTTPS URLs signed by a private or self-signed CA: see [TLS for Private or Self-Signed HTTPS Images](#tls-for-private-or-self-signed-https-images)
 - Public repositories: Ubuntu, CentOS, etc.
 - Internal services: Services accessible from the cluster
 

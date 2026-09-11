@@ -6,6 +6,7 @@ This document provides detailed reference for the KubeVirtBMC Custom Resource De
 
 - [VirtualMachineBMC](#virtualmachinebmc)
 - [Specification](#specification)
+- [RedfishSpec](#redfishspec)
 
 ## VirtualMachineBMC
 
@@ -53,6 +54,10 @@ spec:
       storage:
         storageClassName: fast  # Optional, defaults to the cluster's default StorageClass
         volumeMode: Block       # Optional, one of Filesystem | Block, defaults to Block
+      tls:
+        insecureSkipVerify: false            # Optional, defaults to false
+        caBundleConfigMapRef:
+          name: string                       # Optional
 ```
 
 #### Fields
@@ -117,6 +122,10 @@ redfish:
     storage:
       storageClassName: fast  # Optional, defaults to the cluster's default StorageClass
       volumeMode: Block       # Optional, one of Filesystem | Block, defaults to Block
+    tls:
+      insecureSkipVerify: false            # Optional, defaults to false
+      caBundleConfigMapRef:
+        name: string                       # Optional
 ```
 
 #### Fields
@@ -127,8 +136,12 @@ redfish:
 | `redfish.virtualMedia.storage` | `VirtualMediaStorageSpec` | No | Configures the storage backing the DataVolume. |
 | `redfish.virtualMedia.storage.storageClassName` | `string` | No | StorageClass used for the DataVolume created on virtual media insert. When omitted, the cluster's default StorageClass is used. |
 | `redfish.virtualMedia.storage.volumeMode` | `string` | No | Volume mode for the DataVolume created on virtual media insert. One of `Filesystem` or `Block`. Defaults to `Block`, which has no filesystem overhead and so isn't subject to the StorageClass's CDI `filesystemOverhead` setting. Set to `Filesystem` for a volume with a filesystem instead, e.g. when the StorageClass's provisioner doesn't support raw block volumes. |
+| `redfish.virtualMedia.tls` | `VirtualMediaTLSSpec` | No | Configures TLS behavior when fetching virtual media images over https. |
+| `redfish.virtualMedia.tls.insecureSkipVerify` | `bool` | No | Disables TLS certificate verification when fetching a virtual media image over https. Defaults to `false`. Use with caution — see the [Virtual Media Guide](virtual-media.md#tls-for-private-or-self-signed-https-images). |
+| `redfish.virtualMedia.tls.caBundleConfigMapRef` | `LocalObjectReference` | No | References a ConfigMap, in the same namespace as the `VirtualMachineBMC`, containing a CA bundle under the key `ca.pem`, trusted when fetching a virtual media image over https. |
+| `redfish.virtualMedia.tls.caBundleConfigMapRef.name` | `string` | No | Name of the ConfigMap resource. |
 
-See [Selecting a StorageClass](virtual-media.md#selecting-a-storageclass) and [Selecting a Volume Mode](virtual-media.md#selecting-a-volume-mode) for usage details.
+See [Selecting a StorageClass](virtual-media.md#selecting-a-storageclass), [Selecting a Volume Mode](virtual-media.md#selecting-a-volume-mode), and [TLS for Private or Self-Signed HTTPS Images](virtual-media.md#tls-for-private-or-self-signed-https-images) for usage details.
 
 ### Annotations
 
