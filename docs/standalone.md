@@ -100,6 +100,7 @@ curl -u admin:admin123 http://127.0.0.1:10080/redfish/v1/Systems/1
 
 | Flag | Default | Description |
 |---|---|---|
+| `--config` | | YAML file supplying defaults for any flag below (keys are flag names, command line wins — see [Config File](#config-file)) |
 | `--standalone` | `false` | Enable standalone mode |
 | `--kubeconfig`, `-k` | `/root/.kube/config` | Kubeconfig file used to reach the cluster |
 | `--address`, `-a` | `127.0.0.1` | Listen address |
@@ -114,6 +115,29 @@ curl -u admin:admin123 http://127.0.0.1:10080/redfish/v1/Systems/1
 | `--virtual-media-ca-bundle-configmap` | | ConfigMap (in the VM's namespace, key `ca.pem`) with the CA bundle trusted when fetching virtual media images over https |
 
 Credentials are always passed via the `BMC_USERNAME` and `BMC_PASSWORD` environment variables.
+
+## Config File
+
+`--config` points to a YAML file supplying defaults for any flag; keys are flag names, and anything passed on the command line overrides the file:
+
+```yaml
+# virtbmc.yaml
+address: 0.0.0.0
+enable-ipmi: true
+storage-class: fast
+volume-mode: block
+datavolume-size-margin: 30
+virtual-media-ca-bundle-configmap: my-image-server-ca
+```
+
+```bash
+./bin/virtbmc --standalone \
+    --kubeconfig ~/.kube/config \
+    --config ./virtbmc.yaml \
+    default testvm
+```
+
+Credentials are never read from the file — `BMC_USERNAME`/`BMC_PASSWORD` remain environment-only. A missing or unreadable file is an error, not a silent fallback to defaults.
 
 ## State File
 
