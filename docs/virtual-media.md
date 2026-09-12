@@ -137,31 +137,7 @@ spec:
         volumeMode: Filesystem
 ```
 
-## Volume Mode and Size Margin
-
-Two more virtual media settings are configurable on the `VirtualMachineBMC`:
-
-- **Volume mode**: the DataVolume volume mode, `Filesystem` (CDI's default) or `Block` for raw block devices:
-
-    ```yaml
-    spec:
-      redfish:
-        virtualMedia:
-          storage:
-            volumeMode: Block
-    ```
-
-- **Size margin**: pad the DataVolume size by a percentage of the image size, e.g. `30` pads a 10 GiB image to 13 GiB. Useful when the import needs extra headroom beyond CDI's own overhead accounting:
-
-    ```bash
-    kubectl annotate virtualmachinebmc testvm bmc.kubevirt.io/datavolume-size-margin=30
-    ```
-
-    Invalid or non-positive values mean no padding.
-
-In [standalone mode](standalone.md), where no `VirtualMachineBMC` exists, these settings are passed as `--volume-mode` and `--datavolume-size-margin` flags.
-
-## Storage Overhead
+In [standalone mode](standalone.md), where no `VirtualMachineBMC` exists, this is the `--volume-mode` flag.
 
 If you are using a storage backend with higher filesystem overhead
 than CDI's default assumption of 6% (e.g. Ceph RBD which can have ~9.5%
@@ -211,6 +187,8 @@ metadata:
 This pads the requested DataVolume size by the given percentage (30% in the
 example above). The annotation is absent by default (no padding); an invalid
 (non-integer) value is logged as a warning and also treated as no padding.
+
+In [standalone mode](standalone.md), this is the `--datavolume-size-margin` flag.
 
 ## TLS for Private or Self-Signed HTTPS Images
 
@@ -262,6 +240,8 @@ spec:
     making the connection vulnerable to man-in-the-middle attacks. Prefer
     `caBundleConfigMapRef` when possible, and only use
     `insecureSkipVerify` in trusted network environments.
+
+In [standalone mode](standalone.md), these are the `--virtual-media-insecure-skip-verify` and `--virtual-media-ca-bundle-configmap` flags; the ConfigMap name is resolved in the VM's namespace.
 
 ## Inserting Virtual Media
 
