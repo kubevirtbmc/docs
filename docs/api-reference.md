@@ -48,7 +48,11 @@ spec:
     annotations: {}  # Optional
   ipmi:
     enabled: false  # Optional, defaults to false
-  storageClassName: string  # Optional, defaults to the cluster's default StorageClass
+  redfish:
+    virtualMedia:
+      storage:
+        storageClassName: fast  # Optional, defaults to the cluster's default StorageClass
+        volumeMode: Block       # Optional, defaults to Block
 ```
 
 #### Fields
@@ -61,7 +65,26 @@ spec:
 | `authSecretRef.name` | `string` | Yes | Name of the Secret resource |
 | `service` | `BMCServiceSpec` | No | BMC Service configuration. When omitted, the Service defaults to type `ClusterIP`. |
 | `ipmi` | `IPMISpec` | No | IPMI configuration. When omitted, IPMI is disabled. |
-| `storageClassName` | `string` | No | StorageClass used for the DataVolume created on virtual media insert. When omitted, the cluster's default StorageClass is used. |
+| `redfish` | `RedfishSpec` | No | Redfish configuration. When omitted, Redfish is disabled. |
+
+### RedfishSpec
+
+RedfishSpec configures the Redfish interface and virtual media settings.
+
+```yaml
+redfish:
+  virtualMedia:
+    storage:
+      storageClassName: fast  # Optional, defaults to the cluster's default StorageClass
+      volumeMode: Block       # Optional, defaults to Block
+```
+
+#### Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `redfish.virtualMedia.storage.storageClassName` | `string` | No | StorageClass used for the DataVolume created on virtual media insert. When omitted, the cluster's default StorageClass is used. |
+| `redfish.virtualMedia.storage.volumeMode` | `string` | No | Volume mode for the DataVolume. Defaults to `Block`. |
 
 ### BMCServiceSpec
 
