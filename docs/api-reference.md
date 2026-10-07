@@ -65,7 +65,7 @@ spec:
 | `authSecretRef.name` | `string` | Yes | Name of the Secret resource |
 | `service` | `BMCServiceSpec` | No | BMC Service configuration. When omitted, the Service defaults to type `ClusterIP`. |
 | `ipmi` | `IPMISpec` | No | IPMI configuration. When omitted, IPMI is disabled. |
-| `redfish` | `RedfishSpec` | No | Redfish configuration. When omitted, Redfish is disabled. |
+| `redfish` | `RedfishSpec` | No | Redfish configuration. Redfish is always enabled; when omitted, virtual media uses default settings. |
 
 ### RedfishSpec
 
