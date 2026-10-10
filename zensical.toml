@@ -32,7 +32,8 @@ nav = [
     { "Redfish Guide" = "redfish-guide.md" },
     { "Virtual Media" = "virtual-media.md" }
   ]},
-  { "Adopters" = "adopters.md" }
+  { "Adopters" = "adopters.md" },
+  { "Publications" = "publications/index.md" }
 ]
 
 # Theme: modern Zensical look (default)
