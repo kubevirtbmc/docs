@@ -33,7 +33,7 @@ nav = [
     { "Virtual Media" = "virtual-media.md" }
   ]},
   { "Adopters" = "adopters.md" },
-  { "Blog" = "blog/index.md" }
+  { "Publications" = "publications/index.md" }
 ]
 
 # Theme: modern Zensical look (default)

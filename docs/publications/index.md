@@ -1,14 +1,12 @@
-# Blog
+# Publications
 
-News, tutorials, and community write-ups about KubeVirtBMC.
+Articles, talks, and community write-ups about KubeVirtBMC.
 
 <div class="grid cards" markdown>
 
-- ![Metal3 meets KubeVirtBMC](../assets/images/blog/metal3-meets-kubevirtbmc.jpg)
+- **[Metal3 meets KubeVirtBMC: Provisioning KubeVirt VMs Like Bare Metal](https://www.cncf.io/blog/2026/09/02/metal3-meets-kubevirtbmc-provisioning-kubevirt-vms-like-bare-metal/)**
 
     ---
-
-    **[Metal3 meets KubeVirtBMC: Provisioning KubeVirt VMs Like Bare Metal](https://www.cncf.io/blog/2026/09/02/metal3-meets-kubevirtbmc-provisioning-kubevirt-vms-like-bare-metal/)**
 
     :octicons-calendar-24: September 2, 2026 · CNCF Blog
 
