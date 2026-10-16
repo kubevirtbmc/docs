@@ -9,8 +9,9 @@ One process manages exactly one VirtualMachine.
 - Development and debugging against a live cluster from your workstation
 - Lab environments where installing the CRD/controller is not an option
 - CI setups (e.g. Metal3-style provisioning flows) that only need IPMI/Redfish endpoints in front of existing VMs
+- In-cluster per-VM BMC pods where running the operator is not an option (multi-tenant or otherwise restricted clusters) — see [Deploying in the Cluster](#deploying-in-the-cluster)
 
-If you need multiple BMCs, lifecycle automation, or Service exposure inside the cluster, use the [controller-managed deployment](getting-started.md) instead.
+If you need multiple BMCs with lifecycle automation, use the [controller-managed deployment](getting-started.md) instead.
 
 ## Prerequisites
 
@@ -96,13 +97,28 @@ ipmitool -I lanplus -H 127.0.0.1 -p 10623 -U admin -P admin123 power status
 curl -u admin:admin123 http://127.0.0.1:10080/redfish/v1/Systems/1
 ```
 
+## Deploying in the Cluster
+
+For restricted clusters — where an admin can create a one-time `ClusterRole` but installing a cluster-wide operator with CRDs and webhooks is not an option — each release ships a ready-made `standalone.yaml` next to the agent binaries:
+
+```bash
+curl -LO https://github.com/kubevirtbmc/kubevirtbmc/releases/latest/download/standalone.yaml
+# Before applying, edit: the "default" namespace, the "testvm" VM name,
+# and the credentials in the Secret.
+kubectl apply -f standalone.yaml
+```
+
+The manifest contains a shared `ClusterRole` (`virtbmc-standalone-role`) that every standalone agent in the cluster binds through a namespaced `RoleBinding`, plus the per-VM `Secret`, `ServiceAccount`, `PersistentVolumeClaim`, `Deployment` and `Service`. The agent image is pinned to the release tag.
+
+The PVC is not decoration: the state file under `/var/lib/virtbmc` is the only record of a pending boot override and of the VM's original boot order, and it must survive pod restarts. One agent per VM means one PVC per VM, so the request is intentionally small (100Mi).
+
 ## Flags
 
 | Flag | Default | Description |
 |---|---|---|
 | `--config` | | YAML file supplying defaults for any flag below (keys are flag names, command line wins — see [Config File](#config-file)) |
 | `--standalone` | `false` | Enable standalone mode |
-| `--kubeconfig`, `-k` | `/root/.kube/config` | Kubeconfig file used to reach the cluster |
+| `--kubeconfig`, `-k` | in-cluster config, then `$KUBECONFIG` or `~/.kube/config` | Kubeconfig file used to reach the cluster |
 | `--address`, `-a` | `127.0.0.1` | Listen address |
 | `--redfish-port` | `10080` | Redfish listen port |
 | `--ipmi-port` | `10623` | IPMI listen port |
@@ -141,7 +157,7 @@ Credentials are never read from the file — `BMC_USERNAME`/`BMC_PASSWORD` remai
 
 ## State File
 
-The agent persists boot override state (e.g. a pending one-shot boot backup) to a local JSON file so the state survives agent restarts. By default the file is named after the managed VM in the current working directory, e.g. `./default_testvm.json`, which keeps concurrent agents for different VMs from colliding. Writes are atomic (temporary file + rename). When running the container image, pass `--state-file` under a writable bind mount as shown above.
+The agent persists boot override state (e.g. a pending one-shot boot backup) to a local JSON file so the state survives agent restarts. By default the file is named after the managed VM in the current working directory, e.g. `./default_testvm.json`, which keeps concurrent agents for different VMs from colliding. Writes are atomic (temporary file + rename). When running the container image, pass `--state-file` under a writable bind mount as shown above; the in-cluster [release manifest](#deploying-in-the-cluster) wires it to a PVC for you.
 
 Delete the file to reset the BMC to its default boot behavior.
 
@@ -151,7 +167,7 @@ Delete the file to reset the BMC to its default boot behavior.
 
 ## Differences from Controller-Managed Mode
 
-- No `VirtualMachineBMC` CR, Deployment, Service, or Secret is created — you reach the agent directly at `--address` and its ports
+- No `VirtualMachineBMC` CR is involved and no controller reconciles anything for you — locally you reach the agent directly at `--address` and its ports; in-cluster the [release manifest](#deploying-in-the-cluster) is plain YAML you own
 - Boot override state lives in the local state file instead of the CR status
 - Virtual media settings come from flags (`--storage-class`, `--volume-mode`, `--datavolume-size-margin`, `--virtual-media-insecure-skip-verify`, `--virtual-media-ca-bundle-configmap`) instead of the `VirtualMachineBMC` CR spec and annotations
 - Nothing garbage-collects the agent; its lifecycle is yours to manage
