@@ -137,7 +137,7 @@ spec:
         volumeMode: Filesystem
 ```
 
-## Storage Overhead
+In [standalone mode](standalone.md), where no `VirtualMachineBMC` exists, this is the `--volume-mode` flag.
 
 If you are using a storage backend with higher filesystem overhead
 than CDI's default assumption of 6% (e.g. Ceph RBD which can have ~9.5%
@@ -187,6 +187,8 @@ metadata:
 This pads the requested DataVolume size by the given percentage (30% in the
 example above). The annotation is absent by default (no padding); an invalid
 (non-integer) value is logged as a warning and also treated as no padding.
+
+In [standalone mode](standalone.md), this is the `--datavolume-size-margin` flag.
 
 ## TLS for Private or Self-Signed HTTPS Images
 
@@ -238,6 +240,8 @@ spec:
     making the connection vulnerable to man-in-the-middle attacks. Prefer
     `caBundleConfigMapRef` when possible, and only use
     `insecureSkipVerify` in trusted network environments.
+
+In [standalone mode](standalone.md), these are the `--virtual-media-insecure-skip-verify` and `--virtual-media-ca-bundle-configmap` flags; the ConfigMap name is resolved in the VM's namespace.
 
 ## Inserting Virtual Media
 
