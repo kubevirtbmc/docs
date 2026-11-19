@@ -18,7 +18,8 @@ nav = [
   { "Home" = "index.md" },
   { "Getting Started" = [
     { "Introduction" = "introduction.md" },
-    { "Quick Start" = "getting-started.md" }
+    { "Quick Start" = "getting-started.md" },
+    { "Standalone Mode" = "standalone.md" }
   ]},
   { "Architecture & Development" = [
     { "Architecture" = "architecture.md" },

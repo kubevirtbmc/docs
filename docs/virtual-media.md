@@ -12,6 +12,8 @@ Virtual media allows attaching ISO images to VMs over the network, enabling:
 
 KubeVirtBMC implements Redfish virtual media using KubeVirt's `DeclarativeHotplugVolumes` feature and CDI (Containerized Data Importer).
 
+In [standalone mode](standalone.md#flags) there is no `VirtualMachineBMC`. Storage class, volume mode, DataVolume size margin, and HTTPS TLS settings come from the agent's flags.
+
 ## Prerequisites
 
 ### 1. CDI Installation
