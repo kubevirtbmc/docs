@@ -372,6 +372,23 @@ curl -i -X POST \
 
 **Note:** The request body must be an empty JSON object `{}`.
 
+!!! note "Upgrading from an earlier release"
+
+    Media inserted by v0.11.0 or earlier has no `bmc.kubevirt.io/virtual-media`
+    label. After upgrading, ejecting it keeps the DataVolume, and the next
+    insert fails with `not unused kubevirtbmc virtual media`. Before or right
+    after upgrading, label those DataVolumes with the backfill script
+    (requires `kubectl` and `jq`):
+
+    ```bash
+    curl -sLO https://raw.githubusercontent.com/kubevirtbmc/kubevirtbmc/v0.12.0/hack/backfill-virtual-media-label.sh
+    chmod +x backfill-virtual-media-label.sh
+    ./backfill-virtual-media-label.sh           # dry run
+    ./backfill-virtual-media-label.sh --apply   # label
+    ```
+
+    Set `NAMESPACE=<ns>` to limit it to one namespace.
+
 ## Next Steps
 
 - Read the [Redfish Guide](redfish-guide.md) for complete Redfish API usage
