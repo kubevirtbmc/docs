@@ -1,6 +1,6 @@
 # Standalone Mode
 
-Besides the controller-managed deployment, the virtbmc agent can run as a self-contained binary. In standalone mode the agent talks to the Kubernetes API directly with a kubeconfig you provide — no `VirtualMachineBMC` CRD, no controller, and no cert-manager are required.
+Besides the controller-managed deployment, the virtbmc agent can run as a self-contained binary. In standalone mode the agent talks to the Kubernetes API directly with a kubeconfig you provide, no `VirtualMachineBMC` CRD, no controller, and no cert-manager are required.
 
 One process manages exactly one VirtualMachine.
 
@@ -9,7 +9,7 @@ One process manages exactly one VirtualMachine.
 - Development and debugging against a live cluster from your workstation
 - Lab environments where installing the CRD/controller is not an option
 - CI setups (e.g. Metal3-style provisioning flows) that only need IPMI/Redfish endpoints in front of existing VMs
-- In-cluster per-VM BMC pods where running the operator is not an option (multi-tenant or otherwise restricted clusters) — see [Deploying in the Cluster](#deploying-in-the-cluster)
+- In-cluster per-VM BMC pods where running the operator is not an option (multi-tenant or otherwise restricted clusters), see [Deploying in the Cluster](#deploying-in-the-cluster)
 
 If you need multiple BMCs with lifecycle automation, use the [controller-managed deployment](getting-started.md) instead.
 
@@ -21,13 +21,13 @@ If you need multiple BMCs with lifecycle automation, use the [controller-managed
 
 ### RBAC Requirements
 
-The kubeconfig needs the following permissions in the VM's namespace (the `bmc.kubevirt.io` permissions used by the in-cluster agent are **not** needed in standalone mode):
+The agent needs the following permissions in the VM's namespace (the `bmc.kubevirt.io` permissions used by the managed agent are **not** needed in standalone mode). They live in one `ClusterRole`, granted in each VM namespace by a `RoleBinding`, the same shape as the operator:
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
-  name: virtbmc-standalone
+  name: virtbmc-standalone-role
 rules:
   - apiGroups: ["kubevirt.io"]
     resources: ["virtualmachines"]
@@ -40,7 +40,7 @@ rules:
     verbs: ["get", "watch"]
   - apiGroups: ["cdi.kubevirt.io"]
     resources: ["datavolumes"]
-    verbs: ["create", "delete"]
+    verbs: ["create", "delete", "get"]
   # Only needed with --virtual-media-ca-bundle-configmap
   - apiGroups: [""]
     resources: ["configmaps"]
@@ -99,7 +99,7 @@ curl -u admin:admin123 http://127.0.0.1:10080/redfish/v1/Systems/1
 
 ## Deploying in the Cluster
 
-For restricted clusters — where an admin can create a one-time `ClusterRole` but installing a cluster-wide operator with CRDs and webhooks is not an option — each release ships a ready-made `standalone.yaml` next to the agent binaries:
+For restricted clusters, where an admin can create a one-time `ClusterRole` but installing a cluster-wide operator with CRDs and webhooks is not an option, each release ships a ready-made `standalone.yaml` next to the agent binaries:
 
 ```bash
 curl -LO https://github.com/kubevirtbmc/kubevirtbmc/releases/latest/download/standalone.yaml
@@ -116,7 +116,7 @@ The PVC is not decoration: the state file under `/var/lib/virtbmc` is the only r
 
 | Flag | Default | Description |
 |---|---|---|
-| `--config` | | YAML file supplying defaults for any flag below (keys are flag names, command line wins — see [Config File](#config-file)) |
+| `--config` | | YAML file supplying defaults for any flag below (keys are flag names, command line wins, see [Config File](#config-file)) |
 | `--standalone` | `false` | Enable standalone mode |
 | `--kubeconfig`, `-k` | in-cluster config, then `$KUBECONFIG` or `~/.kube/config` | Kubeconfig file used to reach the cluster |
 | `--address`, `-a` | `127.0.0.1` | Listen address |
@@ -153,7 +153,7 @@ virtual-media-ca-bundle-configmap: my-image-server-ca
     default testvm
 ```
 
-Credentials are never read from the file — `BMC_USERNAME`/`BMC_PASSWORD` remain environment-only. A missing or unreadable file is an error, not a silent fallback to defaults.
+Credentials are never read from the file, `BMC_USERNAME`/`BMC_PASSWORD` remain environment-only. A missing or unreadable file is an error, not a silent fallback to defaults.
 
 ## State File
 
@@ -167,7 +167,7 @@ Delete the file to reset the BMC to its default boot behavior.
 
 ## Differences from Controller-Managed Mode
 
-- No `VirtualMachineBMC` CR is involved and no controller reconciles anything for you — locally you reach the agent directly at `--address` and its ports; in-cluster the [release manifest](#deploying-in-the-cluster) is plain YAML you own
+- No `VirtualMachineBMC` CR is involved and no controller reconciles anything for you, locally you reach the agent directly at `--address` and its ports; in-cluster the [release manifest](#deploying-in-the-cluster) is plain YAML you own
 - Boot override state lives in the local state file instead of the CR status
 - Virtual media settings come from flags (`--storage-class`, `--volume-mode`, `--datavolume-size-margin`, `--virtual-media-insecure-skip-verify`, `--virtual-media-ca-bundle-configmap`) instead of the `VirtualMachineBMC` CR spec and annotations
 - Nothing garbage-collects the agent; its lifecycle is yours to manage

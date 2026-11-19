@@ -12,6 +12,8 @@ Virtual media allows attaching ISO images to VMs over the network, enabling:
 
 KubeVirtBMC implements Redfish virtual media using KubeVirt's `DeclarativeHotplugVolumes` feature and CDI (Containerized Data Importer).
 
+In [standalone mode](standalone.md#flags) there is no `VirtualMachineBMC`. Storage class, volume mode, DataVolume size margin, and HTTPS TLS settings come from the agent's flags.
+
 ## Prerequisites
 
 ### 1. CDI Installation
@@ -137,7 +139,7 @@ spec:
         volumeMode: Filesystem
 ```
 
-In [standalone mode](standalone.md), where no `VirtualMachineBMC` exists, this is the `--volume-mode` flag.
+## Storage Overhead
 
 If you are using a storage backend with higher filesystem overhead
 than CDI's default assumption of 6% (e.g. Ceph RBD which can have ~9.5%
@@ -187,8 +189,6 @@ metadata:
 This pads the requested DataVolume size by the given percentage (30% in the
 example above). The annotation is absent by default (no padding); an invalid
 (non-integer) value is logged as a warning and also treated as no padding.
-
-In [standalone mode](standalone.md), this is the `--datavolume-size-margin` flag.
 
 ## TLS for Private or Self-Signed HTTPS Images
 
@@ -240,8 +240,6 @@ spec:
     making the connection vulnerable to man-in-the-middle attacks. Prefer
     `caBundleConfigMapRef` when possible, and only use
     `insecureSkipVerify` in trusted network environments.
-
-In [standalone mode](standalone.md), these are the `--virtual-media-insecure-skip-verify` and `--virtual-media-ca-bundle-configmap` flags; the ConfigMap name is resolved in the VM's namespace.
 
 ## Inserting Virtual Media
 
