@@ -7,6 +7,7 @@ This guide covers advanced configuration options for KubeVirtBMC.
 - [Helm Chart Configuration](#helm-chart-configuration)
 - [Image Configuration](#image-configuration)
 - [Configuring the BMC Service Type](#configuring-the-bmc-service-type)
+- [Attaching an Additional Network](#attaching-an-additional-network)
 - [Exposing Redfish Externally](#exposing-redfish-externally)
 - [Secret Management](#secret-management)
 
@@ -113,6 +114,121 @@ kubectl get service testvm-virtbmc
 NAME             TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)                       AGE
 testvm-virtbmc   NodePort   10.43.230.200   <none>        623:31623/UDP,80:31080/TCP   2m
 ```
+
+## Attaching an Additional Network
+
+By default, the virtBMC Pod is only connected to the cluster's default Pod network. Set `spec.networkRef` on the `VirtualMachineBMC` resource to attach one additional [Multus](https://github.com/k8snetworkplumbingwg/multus-cni) network to the virtBMC Pod, for example to place the BMC endpoints on a dedicated out-of-band management network. The default Pod network, and the BMC Service, are kept.
+
+`spec.networkRef` references a `NetworkAttachmentDefinition` as either:
+
+- `name`: a `NetworkAttachmentDefinition` in the same namespace as the `VirtualMachineBMC`
+- `namespace/name`: a `NetworkAttachmentDefinition` in another namespace
+
+!!! note
+
+    Changing `spec.networkRef` (setting, updating, or removing it) recreates the virtBMC Pod. Active IPMI and Redfish sessions are dropped while the new Pod starts.
+
+### Prerequisites
+
+1. [Multus CNI](https://github.com/k8snetworkplumbingwg/multus-cni) installed in the cluster
+2. A `NetworkAttachmentDefinition` describing the network to attach
+
+### Example: Attaching a Management Network
+
+#### Step 1: Create a NetworkAttachmentDefinition
+
+This example uses the `macvlan` CNI plugin on the host's `eth1` interface with static `host-local` IPAM. Adjust the CNI configuration to match your environment:
+
+```bash
+kubectl apply -f - <<'EOF'
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: mgmt-net
+  namespace: default
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "eth1",
+      "mode": "bridge",
+      "ipam": {
+        "type": "host-local",
+        "subnet": "192.168.100.0/24",
+        "rangeStart": "192.168.100.10",
+        "rangeEnd": "192.168.100.200"
+      }
+    }
+EOF
+```
+
+#### Step 2: Reference the Network from the VirtualMachineBMC
+
+```bash
+kubectl apply -f - <<EOF
+apiVersion: bmc.kubevirt.io/v1beta1
+kind: VirtualMachineBMC
+metadata:
+  name: test-bmc
+  namespace: default
+spec:
+  virtualMachineRef:
+    name: testvm
+  authSecretRef:
+    name: bmc-secret
+  networkRef: mgmt-net
+EOF
+```
+
+The controller adds the `k8s.v1.cni.cncf.io/networks` annotation to the virtBMC Pod template, and Multus attaches the network when the Pod starts.
+
+#### Step 3: Verify the Attached Network
+
+Once Multus attaches the network, the controller reports it in `status.network` and sets the `NetworkAttached` condition to `True`. The `NETWORK` and `NETWORKIP` columns are shown with `-o wide`:
+
+```bash
+kubectl get virtualmachinebmc test-bmc -o wide
+kubectl get virtualmachinebmc test-bmc -o jsonpath='{.status.network}{"\n"}'
+```
+
+Example output:
+
+```
+{"interface":"net1","ips":["192.168.100.10"],"mac":"36:9c:52:96:83:e9","name":"default/mgmt-net"}
+```
+
+The BMC endpoints are then reachable directly on the attached network's IP address. Traffic on this interface does not go through the BMC Service, so use the virtBMC container ports: `10080` for Redfish and `10623` for IPMI (when `spec.ipmi.enabled` is `true`):
+
+```bash
+curl http://192.168.100.10:10080/redfish/v1
+ipmitool -I lanplus -H 192.168.100.10 -p 10623 -U admin -P password power status
+```
+
+### Troubleshooting
+
+While the network is not attached, `status.network` is empty, the `NetworkAttached` condition is `False`, and its reason explains why:
+
+| Reason | Meaning |
+|--------|---------|
+| `MultusNotInstalled` | The `NetworkAttachmentDefinition` CRD is not present in the cluster. Install Multus. |
+| `NetworkAttachmentDefinitionNotFound` | The referenced `NetworkAttachmentDefinition` does not exist. The virtBMC Pod will not start until it is created. |
+| `NetworkAttachmentPending` | The `NetworkAttachmentDefinition` exists but Multus has not attached it yet. Check the virtBMC Pod events if this persists. |
+
+```bash
+kubectl get virtualmachinebmc test-bmc \
+  -o jsonpath='{.status.conditions[?(@.type=="NetworkAttached")]}{"\n"}'
+```
+
+The admission webhook also returns warnings (not errors) when the `NetworkAttachmentDefinition` or its CRD is missing, since they may be created after the `VirtualMachineBMC`. A malformed `spec.networkRef` (anything other than `name` or `namespace/name`) is rejected.
+
+### Restricting Cross-Namespace Networks
+
+Referencing a `NetworkAttachmentDefinition` in another namespace is allowed and returns an admission warning. To block it, enable `namespaceIsolation` in Multus. This is a Multus setting, not a KubeVirtBMC one.
+
+!!! note
+
+    Even with `namespaceIsolation` enabled, `NetworkAttachmentDefinitions` in the `default` namespace, and in any namespace listed in `globalNamespaces`, remain usable from all namespaces. See [Multus Namespace Isolation](https://github.com/k8snetworkplumbingwg/multus-cni/blob/master/docs/configuration.md#namespace-isolation).
 
 ## Exposing Redfish Externally
 

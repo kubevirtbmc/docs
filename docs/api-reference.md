@@ -7,6 +7,7 @@ This document provides detailed reference for the KubeVirtBMC Custom Resource De
 - [VirtualMachineBMC](#virtualmachinebmc)
 - [Specification](#specification)
 - [RedfishSpec](#redfishspec)
+- [Status](#status)
 
 ## VirtualMachineBMC
 
@@ -49,6 +50,7 @@ spec:
     annotations: {}  # Optional
   ipmi:
     enabled: false  # Optional, defaults to false
+  networkRef: string  # Optional, "name" or "namespace/name" of a NetworkAttachmentDefinition
   redfish:
     virtualMedia:
       storage:
@@ -70,6 +72,7 @@ spec:
 | `authSecretRef.name` | `string` | Yes | Name of the Secret resource |
 | `service` | `BMCServiceSpec` | No | BMC Service configuration. When omitted, the Service defaults to type `ClusterIP`. |
 | `ipmi` | `IPMISpec` | No | IPMI configuration. When omitted, IPMI is disabled. |
+| `networkRef` | `string` | No | A Multus `NetworkAttachmentDefinition`, as `name` (same namespace) or `namespace/name`, attached to the virtBMC Pod as an additional network. The default Pod network is kept. Changing this value recreates the virtBMC Pod. Requires Multus. See [Attaching an Additional Network](configuration.md#attaching-an-additional-network). |
 | `redfish` | `RedfishSpec` | No | Redfish configuration. Redfish is always enabled; when omitted, virtual media uses default settings. |
 
 ### BMCServiceSpec
@@ -152,6 +155,44 @@ In addition to `spec` fields, KubeVirtBMC reads the following annotations on the
 | `bmc.kubevirt.io/datavolume-size-margin` | `string` (integer) | Pads the size requested for the DataVolume created on virtual media insert by this many percent. Absent or invalid values default to `0` (no padding); invalid values are logged as a warning. |
 
 See [Storage Overhead](virtual-media.md#storage-overhead) for usage details.
+
+## Status
+
+### NetworkStatus
+
+When `spec.networkRef` is set, `status.network` reports the additional network attached to the virtBMC Pod, as reported by Multus. It is empty until the network is attached, and cleared when `spec.networkRef` is removed.
+
+```yaml
+status:
+  network:
+    name: default/mgmt-net
+    interface: net1
+    ips:
+    - 192.168.100.10
+    mac: 36:9c:52:96:83:e9
+```
+
+#### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `network.name` | `string` | The `NetworkAttachmentDefinition`, as `namespace/name`. |
+| `network.interface` | `string` | The interface name inside the virtBMC Pod. |
+| `network.ips` | `[]string` | IP addresses assigned on this network. |
+| `network.mac` | `string` | MAC address of the interface. |
+
+`spec.networkRef` and the first IP in `status.network.ips` are shown as the `NETWORK` and `NETWORKIP` columns in `kubectl get virtualmachinebmc -o wide`.
+
+### Conditions
+
+| Type | Status | Reason | Description |
+|------|--------|--------|-------------|
+| `NetworkAttached` | `True` | `NetworkAttached` | The `spec.networkRef` network is attached to the virtBMC Pod. |
+| `NetworkAttached` | `False` | `NetworkAttachmentPending` | Waiting for Multus to attach the network. |
+| `NetworkAttached` | `False` | `NetworkAttachmentDefinitionNotFound` | The referenced `NetworkAttachmentDefinition` does not exist. |
+| `NetworkAttached` | `False` | `MultusNotInstalled` | The `NetworkAttachmentDefinition` CRD is not installed. |
+
+The `NetworkAttached` condition is only present when `spec.networkRef` is set.
 
 ## Related Resources
 
